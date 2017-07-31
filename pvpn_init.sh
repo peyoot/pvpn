@@ -330,13 +330,13 @@ handle_args() {
   SCRIPT_NAME=$1
   shift
 
-  while getopts ":deiup:" opt; do
+  while getopts ":deiup:t:" opt; do
     case $opt in
       d)
         USE_DEFAULTS="yes"
         ;;
-      e)
-        USE_EXTERNAL_INTERFACE="yes"
+      c)
+        VPNCLIENT="yes"
         ;;
       i)
         SANDCATS_GETCERTIFICATE="no"
@@ -347,7 +347,21 @@ handle_args() {
       p)
         DEFAULT_PORT="${OPTARG}"
         ;;
-      *)
+      t)
+	VPN_TYPE="${OPTARG}"
+	if [${VPN_TYPE} != "openvpn" -o ${VPN_TYPE} != "strongswan"]
+	fail  "wrong vpn type"
+	;;
+      m)
+        ${VPN_MODE}="${OPTARG}"
+	if [${VPN_MODE} = "server"]
+		${VPNCLIENT}="no"
+        else if [ ${VPN_MODE} = "client"]
+		${VPNCLIENT}="yes"
+        else 
+	  fail  "wrong vpn mode"
+          ;;
+	*)
         usage
         ;;
     esac
@@ -577,8 +591,9 @@ confirm_to_install() {
     echo "It seems you've already installed palfort vpn. Installation aborded..." >&2
     return
   fi
-  
-
+  echo "you're ablut to install ${VPN_TYPE} in ${VPN_MODE} mode"
+  if [ ${VPNCLIENT}="yes" && ${DEFAULT_VPN_SERVER} = "notavailable"]
+  PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
 }
 
 install_strongswan () {
@@ -590,6 +605,7 @@ install_strongswan () {
     return
   fi
   
+  echo "scripts now will install strongswan to the server..."
   sudo apt install strongswan -y
   echo "..."
   echo "strongswang have been installed. Scripts will perform configuration now, please wait "
@@ -606,19 +622,58 @@ choose_vpn_mode (){
     echo "1. Configure a brandnew palfort vpn server"
     echo "2. Configure as a palfort vpn client"
     echo ""
-    CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to use this Palfort VPN install?" "2")
+    CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to use this Palfort VPN installer?" "2")
   fi
 
-  if [ "1" = "$CHOSEN_VPN_MODE" ] ; then
-    config_vpn_server
+  if [ "2" = "$CHOSEN_VPN_MODE" ] ; then
+    VPN_CLIENT_MODE = "yes"
   else
-    config_vpn_client
+    VPN_SERVER_MODE = "yes"
   fi
 
 }
 
-########## End of Function ######
+configure_ipsec () {
 
+  if ["yes" = "$VPN_SERVER_MODE" ] ; then
+      echo " "
+      echo "You've choose to configure this server as palfort VPN and other clients may connect to this server"
+      CA_SERVER=$(prompt "which CA server would you like to copy CA from?" "$DEFAULT_CA_SERVER")
+      PVPN_SERVER=$(prompt "please input this server's name, like miniserver1,homeserver,etc" "$DEFAULT_SERVER_NAME")
+      PVPN_SERVER_DN=$(prompt "please input VPN's dn field" "$DEFAULT_SERVER_DN")
+      DATE=$(date +%Y%m%d)
+      rsync -avzP '-e ssh -p 10022' ${CA_SERVER}:/etc/ipsec.d/cacerts/cacert.pem /etc/ipsec.d/cacerts/
+      rsync -avzP '-e ssh -p 10022' ${CA_SERVER}:/etc/ipsec.d/private/cakey.pem /etc/ipsec.d/private/
+      ipsec pki --gen --outform pem > /etc/ipsec.d/private/${PVPN_SERVER}key.pem
+      ipsec pki --pub --in /etc/ipsec.d/private/${PVPN_SERVER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn ${PVPN_SERVER_DN} --outform pem > /etc/ipsec.d/certs/${PVPN_SERVER}cert.pem
+      echo " "
+      echo " Keys and certs are ready. Now will configure ipsec.conf and ipsec.secrets"
+      echo "..."
+      # backup ipsec.conf and ipsec.secrets
+      mv /etc/ipsec.conf /tmp/ipsec.bk${DATE}.conf
+      mv /etc/ipsec.secrets /tmp/ipsec.bk${DATE}.secrets
+      echo "# ipsec.conf - strongswan ipsec configuration file\n" > /etc/ipsec.conf
+      echo "config setup" >> /etc/ipsec.conf
+      echo " " >> /etc/ipsec.conf
+      echo "conn %default" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+      echo "palfortvpn" >> /etc/ipsec.conf
+      echo "  left=%defaultroute" >> /etc/ipsec.conf
+      echo "  leftcert=${PVPN_SERVER}cert.pem" >> /etc/ipsec.conf
+      echo "  leftid=${PVPN_SERVER_IP} >> /etc/ipsec.conf
+      echo "  right=${PVPN_CLIENT_HOST} >> /etc/ipsec.conf
+      echo "  auto=add"
+  fi 
+
+}
+
+save_config() {
+write_Config 
+}
+
+########## End of Function ######
+DEFAULT_VPN_SERVER = "notavailable"
+VPNCLIENT = "no"
 # Now that the steps exist as functions, run them in an order that
 # would result in a working install.
 handle_args "$@"
@@ -631,8 +686,10 @@ assert_dependencies
 assert_valid_bundle_file
 ##### all scripts work start here ####
 confirm_to_install
-install_strongswan
 
+install_strongswan
+choose_vpn_mode
+configure_ipsec
 #####
 wait_for_server_bind_to_its_port
 print_success
