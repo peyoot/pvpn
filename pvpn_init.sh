@@ -581,22 +581,98 @@ assert_valid_bundle_file() {
 
 
 ########## Function Area#########
-confirm_to_install() {
+confirm__install() {
   #Perform installation status check, if no installation before, ask user to confirm.
   #use /etc/default/pvpn.conf as status file
   PVPN_INSTALLED="no"
   if [ -e /etc/default/pvpn.conf ]; then
     PVPN_INSTALLED="yes"
-    echo "" >&2
-    echo "It seems you've already installed palfort vpn. Installation aborded..." >&2
+    echo ""
+    echo "It seems you've already installed palfort vpn. Installation aborded..." 
     return
   fi
-  echo "you're ablut to install ${VPN_TYPE} in ${VPN_MODE} mode"
+  echo "you're about to install ${VPN_TYPE} in ${VPN_MODE} mode"
   if [ ${VPNCLIENT}="yes" && ${DEFAULT_VPN_SERVER} = "notavailable"]
   PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
+  echo ""
+  echo "scripts will help you install vpn software and configure it as you specified"
+  echo "if you're not ready, please cancel the installation by press enter directly"
+  echo "Type yes to continue" 
+  if prompt-yesno "OK to continue?" "no" ; then
+     echo "installation aborded"
+     return
+  else
+     perform_install
 }
 
-install_strongswan () {
+
+perform_install() {
+
+  if [ "strongswan" = "${VPN_TYPE}" ] ; then
+    strongswan_install
+  fi
+
+  if [ "openvpn" = "${VPN_TYPE}" ] ; then
+    openvpn_install
+  fi
+
+}
+
+
+openvpn_install () {
+  OVPN_INSTALLED="no"
+  if [ -e /etc/openvpn ]; then
+    OVPN_INSTALLED="yes"
+    echo "" 
+    echo "OpenVPN already installed..."
+    if prompt-yesno "reconfigure OpenVPN?" "no" ; then 
+	echo "Installation aborded"
+        return
+    else
+        echo "scripts will do reinstallation and configuration anyway"
+    fi
+  else
+    echo "You're about to install openvpn and stunnel4"
+      apt update
+      apt install openvpn stunnel4
+      if prompt-yesno "would you like to remove openvpn autorun service" "yes"; then
+        update-rc.d -f openvpn remove
+      else
+        echo "openvpn will automatically run after booting"
+      fi
+    echo "Now scripts will configure your VPN based on your choice"
+    echo "enable stunnel4 autorun after boot"
+    sed -i "s/^ENABLED=0/ENABLED=1/"
+    echo "configuring stunnel4 now"
+    if [ "client" = ${VPN_MODE} ] ; then
+      #configure stunnel client  here
+      echo -n "" > /etc/stunnel/stunnel.conf
+      echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
+      echo "client=yes" >> /etc/stunnel/stunnel.conf
+      echo "accept=127.0.0.1:11000: >> /etc/stunnel/stunnel.conf
+      echo "connect=${VPN_SERVER}:8443 >> /etc/stunnel/stunnel.conf
+      #configure openvpn client here
+
+
+    else
+      #configure stunnel server here
+      echo -n "" > /etc/stunnel/stunnel.conf
+      echo "cert=/etc/stunnel/stunnel.pem" >> /etc/stunnel/stunnel.conf
+      echo "key=/etc/stunnel/stunnel.key" >> /etc/stunnel/stunnel.conf
+      echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
+      echo "accept =8443" >> /etc/stunnel/stunnel.conf
+      echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+      #configure openvpn server here
+
+
+
+
+  fi
+#to be continued
+}
+
+
+strongswan_install () {
   SSWAN_INSTALLED="no"
   if [ -e /etc/strongswan.d ]; then
     SSWAN_INSTALLED="yes"
@@ -685,11 +761,12 @@ detect_current_uid
 assert_dependencies
 assert_valid_bundle_file
 ##### all scripts work start here ####
-confirm_to_install
+confirm__install
+perform_install
 
-install_strongswan
-choose_vpn_mode
-configure_ipsec
+#install_strongswan
+#choose_vpn_mode
+#configure_ipsec
 #####
 wait_for_server_bind_to_its_port
 print_success
