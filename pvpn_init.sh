@@ -239,6 +239,9 @@ prompt-yesno() {
 # Define global variables that the install script will use to mark its
 # own progress.
 
+DEFAULT_VPN_SERVER="nothing"
+VPNCLIENT="no"
+
 USE_DEFAULTS="no"
 USE_EXTERNAL_INTERFACE="no"
 CURRENTLY_UID_ZERO="no"
@@ -343,20 +346,20 @@ handle_args() {
         ;;
       t)
 	VPN_TYPE="${OPTARG}"
-	if [${VPN_TYPE} != "openvpn" -o ${VPN_TYPE} != "strongswan"]
+	if [ "openvpn" != ${VPN_TYPE} -o "strongswan" != ${VPN_TYPE} ] ; then
 	  fail  "wrong vpn type"
         fi
 	;;
       m)
         ${VPN_MODE}="${OPTARG}"
-	if [${VPN_MODE} = "server"]
+	if [${VPN_MODE} = "server"] ; then
 		${VPNCLIENT}="no"
-        else if [ ${VPN_MODE} = "client"]
+        elif [ ${VPN_MODE} = "client"] ; then
 		${VPNCLIENT}="yes"
         else 
 	  fail  "wrong vpn mode"
         fi
-          ;;
+        ;;
 	*)
         usage
         ;;
@@ -588,17 +591,19 @@ confirm__install() {
     return
   fi
   echo "you're about to install ${VPN_TYPE} in ${VPN_MODE} mode"
-  if [ ${VPNCLIENT}="yes" && ${DEFAULT_VPN_SERVER} = "notavailable"]
-  PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
-  echo ""
-  echo "scripts will help you install vpn software and configure it as you specified"
-  echo "if you're not ready, please cancel the installation by press enter directly"
-  echo "Type yes to continue" 
-  if prompt-yesno "OK to continue?" "no" ; then
-     echo "installation aborded"
-     return
-  else
+  if [ ${VPNCLIENT}="yes" && ${DEFAULT_VPN_SERVER} = "notavailable"] ; then
+    PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
+    echo ""
+    echo "scripts will help you install vpn software and configure it as you specified"
+    echo "if you're not ready, please cancel the installation by press enter directly"
+    echo "Type yes to continue" 
+    if prompt-yesno "OK to continue?" "no" ; then
+      echo "installation aborded"
+      return
+    else
      perform_install
+    fi
+  fi
 }
 
 
@@ -617,7 +622,7 @@ perform_install() {
 
 openvpn_install () {
   OVPN_INSTALLED="no"
-  if [ -e /etc/openvpn ]; then
+  if [ -e /etc/openvpn ] ; then
     OVPN_INSTALLED="yes"
     echo "" 
     echo "OpenVPN already installed..."
@@ -702,7 +707,7 @@ openvpn_install () {
       echo ";persist-tun" >> /etc/openvpn/server.conf
       echo "status openvpn-status.log" >> /etc/openvpn/server.conf
       echo "verb 0" >> /etc/openvpn/server.conf
-
+    fi
   fi
 #to be continued
 }
@@ -784,8 +789,6 @@ write_Config
 }
 
 ########## End of Function ######
-DEFAULT_VPN_SERVER = "notavailable"
-VPNCLIENT = "no"
 # Now that the steps exist as functions, run them in an order that
 # would result in a working install.
 handle_args "$@"
