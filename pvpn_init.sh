@@ -22,10 +22,10 @@ set -euo pipefail
 declare -a ORIGINAL_ARGS
 
 # Allow the environment to override curl's User-Agent parameter. We
-# use this to distinguish probably-actual-users installing Sandstorm
+# use this to distinguish probably-actual-users installing Palfort VPN
 # from the automated test suite, which invokes the install script with
 # this environment variable set.
-CURL_USER_AGENT="${CURL_USER_AGENT:-sandstorm-install-script}"
+CURL_USER_AGENT="${CURL_USER_AGENT:-palfort-vpn-install-script}"
 
 # Define I/O helper functions.
 error() {
@@ -241,9 +241,6 @@ prompt-yesno() {
 
 USE_DEFAULTS="no"
 USE_EXTERNAL_INTERFACE="no"
-USE_SANDCATS="no"
-SANDCATS_SUCCESSFUL="no"
-SANDCATS_HTTPS_SUCCESSFUL="no"
 CURRENTLY_UID_ZERO="no"
 PREFER_ROOT="yes"
 SHOW_MESSAGE_ABOUT_NEEDING_PORTS_OPEN="no"
@@ -338,9 +335,6 @@ handle_args() {
       c)
         VPNCLIENT="yes"
         ;;
-      i)
-        SANDCATS_GETCERTIFICATE="no"
-        ;;
       u)
         PREFER_ROOT=no
         ;;
@@ -360,6 +354,7 @@ handle_args() {
 		${VPNCLIENT}="yes"
         else 
 	  fail  "wrong vpn mode"
+        fi
           ;;
 	*)
         usage
