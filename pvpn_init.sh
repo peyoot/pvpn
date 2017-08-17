@@ -652,20 +652,58 @@ openvpn_install () {
       echo "accept=127.0.0.1:11000: >> /etc/stunnel/stunnel.conf
       echo "connect=${VPN_SERVER}:8443 >> /etc/stunnel/stunnel.conf
       #configure openvpn client here
-
+      echo -n "" > /etc/openvpn/client.conf
+      echo "client" >> /etc/openvpn/client.conf
+      echo "dev tap" >> /etc/openvpn/client.conf
+      echo "proto tcp-client" >> /etc/openvpn/client.conf
+      echo "remote 127.0.0.1 11000" >> /etc/openvpn/client.conf
+      echo "resolv-retry infinite" >> /etc/openvpn/client.conf
+      echo "nobind" >> /etc/openvpn/client.conf
+      echo "mute-replay-warnings" >> /etc/openvpn/client.conf
+#     fetch_openvpn_rsa
+      echo "ca /etc/openvpn/rsa/ca.crt" >> /etc/openvpn/client.conf
+      echo "cert /etc/openvpn/rsa/rtu-ovpn.crt" >> /etc/openvpn/client.conf
+      echo "key /etc/openvpn/rsa/rtu-ovpn.key" >> /etc/openvpn/client.conf
+      echo "script-security 2 system" >> /etc/openvpn/client.conf
+      echo "up /etc/openvpn/nonvpn-route.up" >> /etc/openvpn/client.conf
+      echo "down /etc/openvpn/nonvpn-route.down" >> /etc/openvpn/client.conf
+      echo "comp-lzo" >> /etc/openvpn/client.conf
+      echo "verb 3" >> /etc/openvpn/client.conf
 
     else
       #configure stunnel server here
       echo -n "" > /etc/stunnel/stunnel.conf
+#     fetch_server_auth
       echo "cert=/etc/stunnel/stunnel.pem" >> /etc/stunnel/stunnel.conf
       echo "key=/etc/stunnel/stunnel.key" >> /etc/stunnel/stunnel.conf
       echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
       echo "accept =8443" >> /etc/stunnel/stunnel.conf
       echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
       #configure openvpn server here
-
-
-
+      echo -n "" > /etc/openvpn/server.conf
+      echo "port 11000" >> /etc/openvpn/server.conf
+      echo "proto tcp" >> /etc/openvpn/server.conf
+      echo "dev tao" >> /etc/openvpn/server.conf
+      echo "ca /etc/easy-rsa/keys/ca.crt" >> /etc/openvpn/server.conf
+      echo "cert /etc/easy-rsa/keys/palfort-ovpn-server.crt" >> /etc/openvpn/server.conf
+      echo "key /etc/easy-rsa/keys/palfort-ovpn-server.key" >> /etc/openvpn/server.conf
+      echo "dh /etc/easy-rsa/keys/dh1024.pem" >> /etc/openvpn/server.conf
+      echo "" >> /etc/openvpn/server.conf
+      echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server.conf
+      echo "ifconfig-pool-persist ipp.txt" >> /etc/openvpn/server.conf
+      echo ";client-config-dir ccd" >> /etc/openvpn/server.conf
+      echo "push \"redirect-gateway def bypass-dhcp\"" >> /etc/openvpn/server.conf
+      echo "push \"dhcp-option DNS 8.8.8.8\"" >> /etc/openvpn/server.conf
+      echo "client-to-client" >> /etc/openvpn/server.conf
+      echo "keepalive 10 120" >> /etc/openvpn/server.conf
+      echo "comp-lzo" >> /etc/openvpn/server.conf
+      echo "max-clients 100" >>/etc/openvpn/server.conf
+      echo "user nobody" >> /etc/openvpn/server.conf
+      echo "group nobody" >> /etc/openvpn/server.conf
+      echo ";persist-key" >> /etc/openvpn/server.conf
+      echo ";persist-tun" >> /etc/openvpn/server.conf
+      echo "status openvpn-status.log" >> /etc/openvpn/server.conf
+      echo "verb 0" >> /etc/openvpn/server.conf
 
   fi
 #to be continued
