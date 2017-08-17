@@ -344,7 +344,8 @@ handle_args() {
       t)
 	VPN_TYPE="${OPTARG}"
 	if [${VPN_TYPE} != "openvpn" -o ${VPN_TYPE} != "strongswan"]
-	fail  "wrong vpn type"
+	  fail  "wrong vpn type"
+        fi
 	;;
       m)
         ${VPN_MODE}="${OPTARG}"
