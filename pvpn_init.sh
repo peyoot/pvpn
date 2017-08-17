@@ -239,8 +239,8 @@ prompt-yesno() {
 # Define global variables that the install script will use to mark its
 # own progress.
 
-DEFAULT_VPN_SERVER="nothing"
-VPNCLIENT="no"
+DEFAULT_VPN_SERVER="notavailable"
+VPNCLIENT="yes"
 
 USE_DEFAULTS="no"
 USE_EXTERNAL_INTERFACE="no"
@@ -330,7 +330,7 @@ handle_args() {
   SCRIPT_NAME=$1
   shift
 
-  while getopts ":deiup:t:" opt; do
+  while getopts "c:deiup:t:m:" opt; do
     case $opt in
       d)
         USE_DEFAULTS="yes"
@@ -346,18 +346,22 @@ handle_args() {
         ;;
       t)
 	VPN_TYPE="${OPTARG}"
-	if [ "openvpn" != ${VPN_TYPE} -o "strongswan" != ${VPN_TYPE} ] ; then
-	  fail  "wrong vpn type"
+	if [ "openvpn" = "${VPN_TYPE}" ] || [ "${VPN_TYPE}" = "strongswan" ] ; then
+              echo "you'll install and set up ${VPN_TYPE}"
+        else
+	  echo  "wrong vpn type"
+          return 1
         fi
 	;;
       m)
-        ${VPN_MODE}="${OPTARG}"
-	if [${VPN_MODE} = "server"] ; then
-		${VPNCLIENT}="no"
-        elif [ ${VPN_MODE} = "client"] ; then
-		${VPNCLIENT}="yes"
+        VPN_MODE="${OPTARG}"
+	if [ "$VPN_MODE" = "server" ] ; then
+		VPNCLIENT="no"
+        elif [ "$VPN_MODE" = "client" ] ; then
+		VPNCLIENT="yes"
         else 
-	  fail  "wrong vpn mode"
+	  echo  "wrong vpn mode"
+          return 1
         fi
         ;;
 	*)
@@ -366,6 +370,9 @@ handle_args() {
     esac
   done
 
+  # if VPN_TYPE and VPN_MODE didn't get set above, set it to openvpn and client here
+  VPN_TYPE="${VPN_TYPE:-openvpn}"
+  VPN_MODE="${VPN_MODE:-client}"
   # If DEFAULT_PORT didn't get set above, set it to 6080 here.
   DEFAULT_PORT="${DEFAULT_PORT:-6080}"
 
@@ -591,7 +598,7 @@ confirm__install() {
     return
   fi
   echo "you're about to install ${VPN_TYPE} in ${VPN_MODE} mode"
-  if [ ${VPNCLIENT}="yes" && ${DEFAULT_VPN_SERVER} = "notavailable"] ; then
+  if [[ "yes"=${VPNCLIENT} && "notavailable"=${DEFAULT_VPN_SERVER} ]] ; then
     PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
     echo ""
     echo "scripts will help you install vpn software and configure it as you specified"
