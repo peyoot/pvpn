@@ -673,7 +673,13 @@ openvpn_install () {
     echo "mute-replay-warnings" >> /etc/openvpn/client.conf
     echo "Now scripts will download vpn credentials for you, you'll be asked to input password for downloading from palfort cloud"
     curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/it/vpn/openvpn/com-povpn-aws-sg.zip --progress
-    unzip -P kissme com-povpn-aws-sg.zip -d /etc/openvpn/
+    echo "need to wait some seconds till the keys were fully downloaded"
+    sleep 10
+    if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
+      unzip -P kissme com-povpn-aws-sg.zip -d /etc/openvpn/
+    else
+      fail "not able to download keys"
+    fi
     rm -rf com-povpn-aws-sg.zip
     echo "ca /etc/openvpn/keys/ca.crt" >> /etc/openvpn/client.conf
     echo "cert /etc/openvpn/keys/com-ovpn-aws-sg.crt" >> /etc/openvpn/client.conf
