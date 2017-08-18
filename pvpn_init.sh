@@ -676,7 +676,7 @@ openvpn_install () {
     echo "need to wait some seconds till the keys were fully downloaded"
     sleep 10
     if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
-      unzip -P kissme com-povpn-aws-sg.zip -d /etc/openvpn/
+      unzip -fo -P kissme com-povpn-aws-sg.zip -d /etc/openvpn/
     else
       fail "not able to download keys"
     fi
