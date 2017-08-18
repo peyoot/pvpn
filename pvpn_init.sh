@@ -641,13 +641,7 @@ openvpn_install () {
   if [ -e /etc/openvpn ] ; then
     OVPN_INSTALLED="yes"
     echo "" 
-    echo "OpenVPN already installed..."
-    if prompt-yesno "reconfigure OpenVPN?" "no" ; then 
-	echo "Installation aborded"
-        return
-    else
-        echo "scripts will do reinstallation and configuration anyway"
-    fi
+    echo "OpenVPN already installed..., scripts will try to reinstall and configure it anyway"
   else
     echo "You're about to install openvpn and stunnel4"
       apt update
