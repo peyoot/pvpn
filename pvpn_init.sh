@@ -661,7 +661,7 @@ openvpn_install () {
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
     echo "accept=127.0.0.1:11000: >> /etc/stunnel/stunnel.conf
-    echo "connect=${VPN_SERVER}:8443 >> /etc/stunnel/stunnel.conf
+    echo "connect=${PVPN_SERVER}:8443 >> /etc/stunnel/stunnel.conf
     #configure openvpn client here
     echo -n "" > /etc/openvpn/client.conf
     echo "client" >> /etc/openvpn/client.conf
