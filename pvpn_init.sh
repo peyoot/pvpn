@@ -689,6 +689,7 @@ openvpn_install () {
     echo "down /etc/openvpn/nonvpn-route.down" >> /etc/openvpn/client.conf
     echo "comp-lzo" >> /etc/openvpn/client.conf
     echo "verb 3" >> /etc/openvpn/client.conf
+    echo "openvpn client configuration finished!"
 
   else
     #configure stunnel server here
@@ -724,8 +725,9 @@ openvpn_install () {
     echo ";persist-tun" >> /etc/openvpn/server.conf
     echo "status openvpn-status.log" >> /etc/openvpn/server.conf
     echo "verb 0" >> /etc/openvpn/server.conf
+    echo "openVPN server configuration finished"
   fi
-  
+   
 #to be continued
 }
 
