@@ -659,7 +659,7 @@ openvpn_install () {
       fi
     echo "Now scripts will configure your VPN based on your choice"
     echo "enable stunnel4 autorun after boot"
-    sed -i "s/^ENABLED=0/ENABLED=1/"
+    sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel4
     echo "configuring stunnel4 now"
     if [ "client" = ${VPN_MODE} ] ; then
       #configure stunnel client  here
