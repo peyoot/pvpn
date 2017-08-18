@@ -47,11 +47,11 @@ fail() {
   echo "" >&2
   # Users can export REPORT=no to avoid the error-reporting behavior, if they need to.
   if [ "${REPORT:-yes}" = "yes" ] ; then
-    if USE_DEFAULTS=no prompt-yesno "Hmm, installation failed. Would it be OK to send an anonymous error report to the sandstorm.io team so we know something is wrong?
+    if USE_DEFAULTS=no prompt-yesno "Hmm, installation failed. Would it be OK to send an anonymous error report to Palfort team so we know something is wrong?
 It would only contain this error code: $error_code" "yes" ; then
       echo "Sending problem report..." >&2
       local BEARER_TOKEN="ZiV1jbwHBPfpIjF3LNFv9-glp53F7KcsvVvljgKxQAL"
-      local API_ENDPOINT="https://api.oasis.sandstorm.io/api"
+      local API_ENDPOINT="https://api.palfort.net/api"
       local HTTP_STATUS=$(
         dotdotdot_curl \
           --silent \
@@ -74,7 +74,7 @@ It would only contain this error code: $error_code" "yes" ; then
     fi
     echo ""
   fi
-  echo "You can report bugs at: http://github.com/sandstorm-io/sandstorm" >&2
+  echo "You can report bugs at: http://github.com/peyoot/pvpn" >&2
   exit 1
 }
 
@@ -408,10 +408,10 @@ rerun_script_as_root() {
   ENVVARS="$ENVVARS CURL_USER_AGENT=$CURL_USER_AGENT"
 
   if [ "$(basename $SCRIPT_NAME)" == bash ]; then
-    # Probably ran like "curl https://sandstorm.io/install.sh | bash"
+    # Probably ran like "curl https://palfort.net/install.sh | bash"
     echo "Re-running script as root..."
 
-    exec sudo bash -euo pipefail -c "curl -fs -A $CURL_USER_AGENT https://install.sandstorm.io | $ENVVARS bash"
+    exec sudo bash -euo pipefail -c "curl -fs -A $CURL_USER_AGENT https://install.palfort.net | $ENVVARS bash"
   elif [ "$(basename $SCRIPT_NAME)" == install.sh ] && [ -e "$0" ]; then
     # Probably ran like "bash install.sh" or "./install.sh".
     echo "Re-running script as root..."
@@ -427,7 +427,7 @@ rerun_script_as_root() {
 Please download a copy and name it 'install.sh' and run that as root, perhaps using sudo. \
 Try this command:
 
-curl https://install.sandstorm.io/ > install.sh && sudo bash install.sh"
+curl https://install.palfort.net/ > install.sh && sudo bash install.sh"
 }
 
 set_umask() {
@@ -587,7 +587,16 @@ assert_valid_bundle_file() {
 
 
 ########## Function Area#########
-confirm__install() {
+check_run_as_root(){
+    if [ "no" = "$CURRENTLY_UID_ZERO" ] ; then
+      rerun_script_as_root
+    else
+      echo "already root"
+    fi
+    
+
+}
+confirm_install() {
   #Perform installation status check, if no installation before, ask user to confirm.
   #use /etc/default/pvpn.conf as status file
   PVPN_INSTALLED="no"
@@ -602,13 +611,13 @@ confirm__install() {
     PVPN_SERVER=$(prompt "please input VPN's server IP" "$DEFAULT_VPN_SERVER")
     echo ""
     echo "scripts will help you install vpn software and configure it as you specified"
-    echo "if you're not ready, please cancel the installation by press enter directly"
+    echo "if you're not ready, please cancel the installation by enter no"
     echo "Type yes to continue" 
-    if prompt-yesno "OK to continue?" "no" ; then
-      echo "installation aborded"
-      return
+    if prompt-yesno "OK to continue?" "yes" ; then
+      perform_install
     else
-     perform_install
+      echo "installation aborded" 
+      return
     fi
   fi
 }
@@ -807,15 +816,15 @@ detect_current_uid
 assert_dependencies
 assert_valid_bundle_file
 ##### all scripts work start here ####
-confirm__install
-perform_install
+check_run_as_root
+confirm_install
 
 #install_strongswan
 #choose_vpn_mode
 #configure_ipsec
 #####
-wait_for_server_bind_to_its_port
-print_success
+#wait_for_server_bind_to_its_port
+#print_success
 }
 
 # Now that we know the whole script has downloaded, run it.
