@@ -736,71 +736,91 @@ strongswan_install () {
   SSWAN_INSTALLED="no"
   if [ -e /etc/strongswan.d ]; then
     SSWAN_INSTALLED="yes"
-    echo "" >&2   
-    echo "Strongswan already instaled..." >&2
-    return
+    echo ""    
+    echo "Strongswan already instaled.... Scripts will try to install and reconfigure it anyway" 
+  fi
+  echo "scripts now will install strongswan to the server..."
+  sudo apt update
+  sudo apt install strongswan 
+  echo "..."  
+  echo "strongswang have been installed. Scripts will fetch certs and key now " 
+  if prompt-yesno "generate brand-new ca key and cert?" "yes" ; then
+    echo "you choose to generate new ca key and ca cert"
+    PVPN_SERVER=$(prompt "please input the server IP or domain,CN will use this field" "$DEFAULT_VPN_SERVER")
+    ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
+    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${PVPN_SERVER}" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+    echo "cakey and cacert have been generated and stored"
+  else
+    echo "you've choose to download ca key and cert from palfort server. you'll be asked for the credentail while prepare to downloading the ca eky" 
+    curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/IT/vpn/openvpn/ca-pvpn.zip
+    if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
+      unzip -fo -P kissme ca-pvpn.zip -d /etc/ipsec.d/
+      echo "ca key and cert have been extract to the ipsec.d/private"
+    else
+      fail "not able to download keys"
+    fi
   fi
   
-  echo "scripts now will install strongswan to the server..."
-  sudo apt install strongswan -y
-  echo "..."
-  echo "strongswang have been installed. Scripts will perform configuration now, please wait "
-
-
-}
-
-
-choose_vpn_mode (){
-
-  if [ -z "${CHOSEN_VPN_MODE:-}" ]; then
-    echo "You can have:"
-    echo ""
-    echo "1. Configure a brandnew palfort vpn server"
-    echo "2. Configure as a palfort vpn client"
-    echo ""
-    CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to use this Palfort VPN installer?" "2")
-  fi
-
-  if [ "2" = "$CHOSEN_VPN_MODE" ] ; then
-    VPN_CLIENT_MODE = "yes"
-  else
-    VPN_SERVER_MODE = "yes"
-  fi
+  echo "you're about to generate your server key with the CA"    
+  echo "generate a server key"
+  ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
+  echo "issue a server cert with ca"
+  ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${PVPN_SERVER}" --san="${PVPN_SERVER}" --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+  echo "now server cert have issued"
+  echo "keys and certs are ready. Now will configure ipsec.conf and ipsec.secrets"
+  configure_ipsec
 
 }
+
+
 
 configure_ipsec () {
-
-  if ["yes" = "$VPN_SERVER_MODE" ] ; then
-      echo " "
-      echo "You've choose to configure this server as palfort VPN and other clients may connect to this server"
-      CA_SERVER=$(prompt "which CA server would you like to copy CA from?" "$DEFAULT_CA_SERVER")
-      PVPN_SERVER=$(prompt "please input this server's name, like miniserver1,homeserver,etc" "$DEFAULT_SERVER_NAME")
-      PVPN_SERVER_DN=$(prompt "please input VPN's dn field" "$DEFAULT_SERVER_DN")
+# backup previous configuration based on date
       DATE=$(date +%Y%m%d)
-      rsync -avzP '-e ssh -p 10022' ${CA_SERVER}:/etc/ipsec.d/cacerts/cacert.pem /etc/ipsec.d/cacerts/
-      rsync -avzP '-e ssh -p 10022' ${CA_SERVER}:/etc/ipsec.d/private/cakey.pem /etc/ipsec.d/private/
-      ipsec pki --gen --outform pem > /etc/ipsec.d/private/${PVPN_SERVER}key.pem
-      ipsec pki --pub --in /etc/ipsec.d/private/${PVPN_SERVER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn ${PVPN_SERVER_DN} --outform pem > /etc/ipsec.d/certs/${PVPN_SERVER}cert.pem
-      echo " "
-      echo " Keys and certs are ready. Now will configure ipsec.conf and ipsec.secrets"
-      echo "..."
+#      rsync -avzP '-e ssh -p 10022' ${CA_SERVER}:/etc/ipsec.d/cacerts/cacert.pem /etc/ipsec.d/cacerts/
+      echo "now backup ipsec.conf and ipsec.secrets to /tmp/..."
       # backup ipsec.conf and ipsec.secrets
       mv /etc/ipsec.conf /tmp/ipsec.bk${DATE}.conf
       mv /etc/ipsec.secrets /tmp/ipsec.bk${DATE}.secrets
+      echo "backup done"
+
+  if ["server" = "$VPN_MODE" ] ; then
+#     configure strongswan as VPN server with public IP
+      echo " "
+      echo "You have choosed to configure this server as palfort VPN and other clients may connect to this server"
+      echo "wring configuration ..."
       echo "# ipsec.conf - strongswan ipsec configuration file\n" > /etc/ipsec.conf
       echo "config setup" >> /etc/ipsec.conf
       echo " " >> /etc/ipsec.conf
       echo "conn %default" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "palfortvpn" >> /etc/ipsec.conf
+      echo "conn palfortvpn" >> /etc/ipsec.conf
       echo "  left=%defaultroute" >> /etc/ipsec.conf
       echo "  leftcert=${PVPN_SERVER}cert.pem" >> /etc/ipsec.conf
-      echo "  leftid=${PVPN_SERVER_IP} >> /etc/ipsec.conf
-      echo "  right=${PVPN_CLIENT_HOST} >> /etc/ipsec.conf
-      echo "  auto=add"
-  fi 
+      echo "  leftid=${PVPN_SERVER} " >> /etc/ipsec.conf
+      echo "  right=%any " >> /etc/ipsec.conf
+      echo "  auto=add"  >> /etc/ipsec.conf
+      echo "VPN server configuration doen"
+  else
+#    configure strongswan as VPN clinet that don't need public IP and connect to server
+      echo " "
+      echo "You have choosed to configure this computer as palfort VPN client that can connect to Palfort VPN server"
+      echo "Wright client configuration ..."
+      echo "# ipsec.conf -strongswan ipsec configuration file \n" > /etc/ipsec.conf
+      echo "config setup" >> /etc/ipsec.conf
+      echo " " >> /etc/ipsec.conf
+      echo "conn %default" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+      echo "conn palfortvpn" >> /etc/ipsec.conf
+      echo "  left=%defaultroute" >> /etc/ipsec.conf
+      echo "  leftcert=${PVPN_CLIENT_CERT}cert.pem" >> /etc/ipsec.conf
+      echo "  leftid=${PVPN_CLIENT_ID}" >> /etc/ipsec.conf
+      echo "  right=${PVPN_SERVER}" >> /etc/ipsec.conf
+      echo "  auto=add"  >> /etc/ipsec.conf
 
+      echo " VPN Client configuration done"
+
+  fi
 }
 
 save_config() {
