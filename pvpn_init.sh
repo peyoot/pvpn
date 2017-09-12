@@ -753,10 +753,10 @@ strongswan_install () {
     echo "cakey and cacert have been generated and stored"
   else
     echo "you've choose to download ca key and cert from palfort server. you'll be asked for the credentail while prepare to downloading the ca eky" 
-    curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/IT/vpn/openvpn/ca-pvpn.zip
+    curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/IT/vpn/strongswan/ca-strongswan-aws-sg.zip
     if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
-      unzip -fo -P kissme ca-pvpn.zip -d /etc/ipsec.d/
-      echo "ca key and cert have been extract to the ipsec.d/private"
+      unzip -fo -P kissme ca-strongswan-aws-sg.zip -d /etc/ipsec.d/
+      echo "ca key and cert have been extract to the /etc/ipsec.d"
     else
       fail "not able to download keys"
     fi
@@ -769,6 +769,7 @@ strongswan_install () {
   ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${PVPN_SERVER}" --san="${PVPN_SERVER}" --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
   echo "now server cert have issued"
   echo "keys and certs are ready. Now will configure ipsec.conf and ipsec.secrets"
+  echo "you need to generate and manage road worriors' certs case by case."
   configure_ipsec
 
 }
