@@ -749,7 +749,7 @@ strongswan_install () {
     echo "strongswang have been installed. Scripts will now try to fetch certs and key if needed " 
   fi
   if [ -e /etc/ipsec.d/cacerts/cacert.pem ]; then
-    if prompt-yesno "Use current CA?" no ; then
+    if prompt-yesno "Found CA already there, Do you still want a new CA?" no ; then
       if prompt-yesno "generate brand-new ca key and cert?" "yes" ; then
         echo "you choose to generate new ca key and ca cert"
         DEFAULT_CA_CN=$(prompt "please input the CN for the CA certs, Normaly by default it is vpn.palfort.com" "vpn.palfort.com")
