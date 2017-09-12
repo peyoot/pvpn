@@ -735,33 +735,39 @@ openvpn_install () {
 
 strongswan_install () {
   SSWAN_INSTALLED="no"
+  USE_CURRENT_CA="no"
   if [ -e /etc/strongswan.d ]; then
     SSWAN_INSTALLED="yes"
     echo ""    
-    echo "Strongswan already instaled.... Scripts will try to install and reconfigure it anyway" 
+    echo "Strongswan already instaled...." 
   fi
-  echo "scripts now will install strongswan to the server..."
-  sudo apt update
-  sudo apt install strongswan 
-  echo "..."  
-  echo "strongswang have been installed. Scripts will fetch certs and key now " 
-  if prompt-yesno "generate brand-new ca key and cert?" "yes" ; then
-    echo "you choose to generate new ca key and ca cert"
-    DEFAULT_CA_CN=$(prompt "please input the CN for the CA certs, Normaly by default it is vpn.palfort.com" "vpn.palfort.com")
-    ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${DEFAULT_CA_CN}" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
-    echo "cakey and cacert have been generated and stored"
-  else
-    echo "you've choose to download ca key and cert from palfort server. you'll be asked for the credentail while prepare to downloading the ca eky" 
-    curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/IT/vpn/strongswan/ca-strongswan-aws-sg.zip
-    if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
-      unzip -fo -P kissme ca-strongswan-aws-sg.zip -d /etc/ipsec.d/
-      echo "ca key and cert have been extract to the /etc/ipsec.d"
-    else
-      fail "not able to download keys"
+  if [  "no" = "$SSWAN_INSTALLED" ]; then
+    echo "scripts now will install strongswan to the server..."
+    sudo apt update
+    sudo apt install strongswan 
+    echo "..."  
+    echo "strongswang have been installed. Scripts will now try to fetch certs and key if needed " 
+  fi
+  if [ -e /etc/ipsec.d/cacerts/cacert.pem ]; then
+    if prompt-yesno "Use current CA?" no ; then
+      if prompt-yesno "generate brand-new ca key and cert?" "yes" ; then
+        echo "you choose to generate new ca key and ca cert"
+        DEFAULT_CA_CN=$(prompt "please input the CN for the CA certs, Normaly by default it is vpn.palfort.com" "vpn.palfort.com")
+        ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
+        ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${DEFAULT_CA_CN}" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+        echo "cakey and cacert have been generated and stored"
+      else
+        echo "you've choose to download ca key and cert from palfort server. you'll be asked for the credentail while prepare to downloading the ca eky" 
+        curl -u robin -O https://pan.palfort.com/remote.php/webdav/Documents/palfort/IT/vpn/strongswan/ca-strongswan-aws-sg.zip
+        if prompt-yesno "You need to wail till 100% download. Is downloading finished?" "yes" ; then
+          unzip -fo -P kissme ca-strongswan-aws-sg.zip -d /etc/ipsec.d/
+          echo "ca key and cert have been extract to the /etc/ipsec.d"
+        else
+          fail "not able to download keys"
+        fi
+      fi
     fi
   fi
-  
   echo "you're about to generate your server key with the CA"    
   echo "generate a server key"
   ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
