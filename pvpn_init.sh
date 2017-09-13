@@ -241,7 +241,7 @@ prompt-yesno() {
 
 DEFAULT_VPN_SERVER="notavailable"
 VPNCLIENT="yes"
-
+DEFAULT_CLIENT_NAME="common"
 USE_DEFAULTS="no"
 USE_EXTERNAL_INTERFACE="no"
 CURRENTLY_UID_ZERO="no"
@@ -768,16 +768,26 @@ strongswan_install () {
       fi
     fi
   fi
-  echo "you're about to generate your server key with the CA"    
-  echo "generate a server key"
-  ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-  echo "issue a server cert with ca"
-  ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${PVPN_SERVER}" --san="${PVPN_SERVER}" --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
-  echo "now server cert have issued"
-  echo "keys and certs are ready. Now will configure ipsec.conf and ipsec.secrets"
-  echo "you need to generate and manage road worriors' certs case by case."
-  configure_ipsec
-
+  if prompt-yesno "Do you want to generate server key and certs for this server right now?" no ; then
+    echo "you're about to generate your server key with the CA"
+    echo "generate a server key"
+    ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
+    echo "issue a server cert with ca"
+    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${PVPN_SERVER}" --san="${PVPN_SERVER}" --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+    echo "now server cert have issued"
+    echo "serverkey.pem and servercert.pem are there. You can choose to generate remote peer's cert now"
+    echo "you can aslo generate and manage road worriors' certs manually case by case."
+  fi
+  if prompt-yesno "Do you want to create a client certs?" no ; then
+     CLIENT_NAME=$(prompt "Please input the remote peer's name,it will also be use as part of the certname:" "$DEFAULT_CLIENT_NAME")
+     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_NAME}key.pem
+     ipsec pki --pub --in  /etc/ipsec.d/private/${CLIENT_NAME}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CH,O=Palfort,CN=${CLIENT_NAME}@palfort.com" --outform pem > /etc/ipsec.d/certs/${CLIENT_NAME}cert.pem
+     openssl pkcs12 -export -inkey /etc/ipsec.d/private/${CLIENT_NAME}key.pem -in /etc/ipsec.d/certs/${CLIENT_NAME}cert.pem -name "${CLIENT_NAME}" -certfile /etc/ipsec.d/cacerts/cacert.pem -caname "vpn.palfort.com" -out ${CLIENT_NAME}cert.p12
+  fi
+  if prompt-yesno "Do you want to configure your ipsec vpn right now?" no ; then
+    configure_ipsec
+  fi
+  echo "Everythig have done successfully"
 }
 
 
