@@ -648,7 +648,7 @@ openvpn_install () {
   apt update
   apt install openvpn stunnel4
   if prompt-yesno "would you like to remove openvpn autorun service" "yes"; then
-    update-rc.d -f openvpn remove
+    systemctl disable openvpn.service
   else
     echo "openvpn will automatically run after booting"
   fi
@@ -661,8 +661,8 @@ openvpn_install () {
     echo -n "" > /etc/stunnel/stunnel.conf
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
-    echo "accept=127.0.0.1:11000: >> /etc/stunnel/stunnel.conf
-    echo "connect=${PVPN_SERVER}:8443 >> /etc/stunnel/stunnel.conf
+    echo "accept=127.0.0.1:11000:" >> /etc/stunnel/stunnel.conf
+    echo "connect=${PVPN_SERVER}:8443" >> /etc/stunnel/stunnel.conf
     #configure openvpn client here
     echo -n "" > /etc/openvpn/client.conf
     echo "client" >> /etc/openvpn/client.conf
