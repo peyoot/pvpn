@@ -16,3 +16,7 @@ $>./pvpn_init -t openvpn -m client
 
 
 
+***** updated in 2019 July****
+To make it more simply and easy to use. We'll add an option to help customer build PKI and install both VPN server, generate an client RSA certification when user choose fast installation at the begining of the interactivities.
+openvpn will also use strongswan PKI by default. For those who want to use openvpn only, we'll use latest EasyRSA 3 as PKI.
+
