@@ -13,10 +13,13 @@ You're welcome to join Palfort. More information please feel free to send an ema
 
 ******examples*****
 $>./pvpn_init -t openvpn -m client
+or use latest scripts
+$>./install_vpn.sh
 
 
 
 ***** updated in 2019 July****
 To make it more simply and easy to use. We'll add an option to help customer build PKI and install both VPN server, generate an client RSA certification when user choose fast installation at the begining of the interactivities.
 openvpn will also use strongswan PKI by default. For those who want to use openvpn only, we'll use latest EasyRSA 3 as PKI.
+try with latest install scripts:  install_vpn.sh
 
