@@ -194,6 +194,7 @@ else
   else
     VPN_TYPE="dualvpn"
   fi
+fi
 }
 
 confirm_install() {
@@ -203,7 +204,7 @@ confirm_install() {
     openvpn_install
   else
     dualvpn_install
-
+  fi
 }
 
 confirm_setting() {
@@ -213,24 +214,26 @@ confirm_setting() {
     openvpn_config
   else
     dualvpn_install
+  fi
 }
 
 use_existingCA() {
-#if easyrsa3 doesn't exist, it will use  strongswan PKI.
-  if [ "openvpn" = "$VPN_TYPE"]
+  if [ "openvpn" = "$VPN_TYPE"] ; then
     CA_FILE="/etc/openvpn/easyrsa3/pki/ca.crt"
   else 
     CA_FILE="/etc/ipsec.d/cacerts/ca.crt"
   fi
   if [ -e $CA_FILE ]; then
-        echo "Scripts will use CA file $CA_FILE"
-  else if prompt-yesno "CA doesn't exist. Palfort Projects participants can download it automatically. Would you like to download it?" "yes"; then
-    download_CA
-  else
-    echo "please put your CA to $CA_FILE first and then try again. The installation now aborded"
-    exit 1
+    echo "Scripts will use CA file $CA_FILE"
+  else 
+    echo "CA doesn't exist"
+    if prompt-yesno "Palfort administrator can download it automatically. Would you like to download it? if you're not authorized, please type no" "no"; then
+       download_CA
+    else
+        echo "please put your CA to $CA_FILE first and then try again. The installation now aborded"
+        exit 1
+    fi
   fi 
-
 }
 
 download_CA() {
@@ -238,29 +241,29 @@ download_CA() {
   exit 1
 }
 
-buildCA()  {
-  if [ "openvpn" = "$VPN_TYPE"]
+buildCA() {
+  echo "scripts will create CA for you "
+#  if ["openvpn" = "$VPN_TYPE"] then;
 #    exec buildCA_easyRSA3
-     echo "You'v chosen to use openVPN and build CA with easyRSA3"
-     if [ -n "${OPENVPNCA:-}" ]; then
-       if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it?" "yes" then;
-          rm -rf $OPENVPNCA
-          echo "creating CA with easyrsa3
-          echo "to be done"
-       else 
-          return
-       fi
-      fi
-  else 
-    if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it" "yes" then;
-      rm -rf $IPSECCA
-    else
-       return
-   fi
+#     echo "You'v chosen to use openVPN and build CA with easyRSA3"
+#     if [ -n "${OPENVPNCA:-}" ]; then
+#       if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it?" "yes" then;
+#          echo "rm -rf $OPENVPNCA"
+#          echo "creating CA with easyrsa3
+#          echo "to be done"
+#       else 
+#          return
+#       fi
+#     fi
+#  else 
+#    if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it" "yes" then;
+#      echo "    rm -rf $IPSECCA"
+#    else
+#       return
+#    fi
    ehco "creating CA with ipsec pki now, to be done"
    echo "here place scripts to create ipsec pki CA"
-  fi
-
+#  fi
 }
 
 
@@ -296,7 +299,7 @@ openvpn_install()  {
      wget -P /tmp/easyrsa/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
      tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz /etc/openvpn/
   else
-    echo "you'll use stongswan PKI in openvpn.
+    echo "you'll use stongswan PKI in openvpn."
   fi
   
 }
@@ -317,9 +320,9 @@ handle_args "$@"
 set_umask
 assert_on_terminal
 prepare_installation_paras
-confirm_install
-prompt "123" "456"
-choose_install_mode
+#confirm_install
+#prompt "123" "456"
+#choose_install_mode
 
 }
 
