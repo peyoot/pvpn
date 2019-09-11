@@ -207,18 +207,19 @@ confirm_install() {
   fi
 }
 
+
 confirm_setting() {
   echo "sctips are about to setup software based on your choise"
   echo "you've chosen $VPN_TYPE"
   if [ "openvpn" = "$VPN_TYPE" ] ; then
     openvpn_config
   else
-    dualvpn_install
+    dualvpn_config
   fi
 }
 
 use_existingCA() {
-  if [ "openvpn" = "$VPN_TYPE"] ; then
+  if [ "openvpn" = "$VPN_TYPE" ] ; then
     CA_FILE="/etc/openvpn/easyrsa3/pki/ca.crt"
   else 
     CA_FILE="/etc/ipsec.d/cacerts/ca.crt"
@@ -243,7 +244,7 @@ download_CA() {
 
 buildCA() {
   echo "scripts will create CA for you "
-#  if ["openvpn" = "$VPN_TYPE"] then;
+#  if [ "openvpn" = "$VPN_TYPE" ] then;
 #    exec buildCA_easyRSA3
 #     echo "You'v chosen to use openVPN and build CA with easyRSA3"
 #     if [ -n "${OPENVPNCA:-}" ]; then
@@ -294,10 +295,12 @@ openvpn_install()  {
 #for openvpn sole installation, need to  install easyrsa aswell
   apt update
   apt install -y openvpn stunnel4
-  if ["openvpn" = $VPN_TYPE] ; then
+  echo "vpn type is $VPN_TYPE, and  vpn mode is $VPN_MODE"
+  if [ "openvpn" = "$VPN_TYPE" ] ; then
      echo "you're about to install easyRSA3 as PKI tool"
-     wget -P /tmp/easyrsa/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
-     tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz /etc/openvpn/
+     rm -rf  /tmp/EasyRSA*
+     wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
+     tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz -C /etc/openvpn/
   else
     echo "you'll use stongswan PKI in openvpn."
   fi
@@ -320,10 +323,8 @@ handle_args "$@"
 set_umask
 assert_on_terminal
 prepare_installation_paras
-#confirm_install
-#prompt "123" "456"
-#choose_install_mode
-
+confirm_install
+confirm_setting
 }
 
 # Now that we know the whole script has downloaded, run it.
