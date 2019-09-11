@@ -244,9 +244,9 @@ download_CA() {
 
 buildCA() {
   echo "scripts will create CA for you "
-#  if [ "openvpn" = "$VPN_TYPE" ] then;
-#    exec buildCA_easyRSA3
-#     echo "You'v chosen to use openVPN and build CA with easyRSA3"
+  if [ "openvpn" = "$VPN_TYPE" ] ; then
+     echo "You'v chosen to use openVPN and build CA with easyRSA3"
+
 #     if [ -n "${OPENVPNCA:-}" ]; then
 #       if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it?" "yes" then;
 #          echo "rm -rf $OPENVPNCA"
@@ -256,7 +256,7 @@ buildCA() {
 #          return
 #       fi
 #     fi
-#  else 
+  else 
 #    if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it" "yes" then;
 #      echo "    rm -rf $IPSECCA"
 #    else
@@ -264,7 +264,7 @@ buildCA() {
 #    fi
    ehco "creating CA with ipsec pki now, to be done"
    echo "here place scripts to create ipsec pki CA"
-#  fi
+  fi
 }
 
 
@@ -298,9 +298,17 @@ openvpn_install()  {
   echo "vpn type is $VPN_TYPE, and  vpn mode is $VPN_MODE"
   if [ "openvpn" = "$VPN_TYPE" ] ; then
      echo "you're about to install easyRSA3 as PKI tool"
-     rm -rf  /tmp/EasyRSA*
-     wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
-     tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz -C /etc/openvpn/
+     if [ -e /etc/openvpn/easyrsa ] ; then
+       if prompt-yesno "easyrsa PKI already there, remove it and build a new one?" "yes" ; then
+         rm -rf /etc/openvpn/easyrsa
+         rm -rf  /tmp/EasyRSA*
+         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
+         tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz -C /etc/openvpn/
+         mv /etc/openvpn/EasyRSA-unix-v3.0.6 /etc/openvpn/easyrsa
+       else  
+         return
+       fi
+     fi
   else
     echo "you'll use stongswan PKI in openvpn."
   fi
