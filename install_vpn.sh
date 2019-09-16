@@ -272,11 +272,27 @@ buildCA() {
 openvpn_config() {
   echo "you'll use openvpn and easyRSA as PKI tool"
   if [ "server" = "$VPN_MODE" ] ; then
-    if prompt-yesno "Generate your own CA" "yes" ; then
-        buildCA
-    else  
-        use_existingCA
+    cd /etc/openvpn/easyrsa
+    echo "Now in /etc/openvpn/easyrsa"
+    if [ ! -e /etc/openvpn/easyrsa/pki ] ; then
+      echo "no PKI foler found,scripts will help you create one"
+      /etc/openvpn/easyrsa/easyrsa init-pki
     fi
+    if  [ -e /etc/openvpn/easyrsa/pki/ca.crt ] ; then
+      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+        echo "use current CA"
+        return
+      else
+        echo "remove previous CA"
+        rm -rf /etc/openvpn/easyrsa/pki ca.crt
+      fi
+    fi
+    echo "Scripts will help you to generate your own CA now" 
+    if [ ! -e /etc/openvpn/easyrsa/vars ] ; then
+      exec mv vars.example vars
+    fi
+    exec ./easyrsa build-ca nopass
+    
   fi
 }
 
