@@ -248,7 +248,7 @@ buildCA() {
      echo "You'v chosen to use openVPN and build CA with easyRSA3"
 
 #     if [ -n "${OPENVPNCA:-}" ]; then
-#       if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it?" "yes" then;
+#       if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it?" "yes" ; then
 #          echo "rm -rf $OPENVPNCA"
 #          echo "creating CA with easyrsa3
 #          echo "to be done"
@@ -257,7 +257,7 @@ buildCA() {
 #       fi
 #     fi
   else 
-#    if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it" "yes" then;
+#    if prompt_yesno "It seems you already have a CA in the path, do you want to create a new one to replace it" "yes" ; then
 #      echo "    rm -rf $IPSECCA"
 #    else
 #       return
@@ -299,15 +299,19 @@ openvpn_install()  {
   if [ "openvpn" = "$VPN_TYPE" ] ; then
      echo "you're about to install easyRSA3 as PKI tool"
      if [ -e /etc/openvpn/easyrsa ] ; then
-       if prompt-yesno "easyrsa PKI already there, remove it and build a new one?" "yes" ; then
-         rm -rf /etc/openvpn/easyrsa
+       if prompt-yesno "easyrsa PKI already there, remove it and set up a new one?" "yes" ; then
+         rm -rf /etc/openvpn/easyrsa*
          rm -rf  /tmp/EasyRSA*
-         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.6/EasyRSA-unix-v3.0.6.tgz
-         tar xvf /tmp/EasyRSA-unix-v3.0.6.tgz -C /etc/openvpn/
-         mv /etc/openvpn/EasyRSA-unix-v3.0.6 /etc/openvpn/easyrsa
+         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
+         tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
+         mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
        else  
          return
        fi
+     else
+       wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
+       tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
+       mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
      fi
   else
     echo "you'll use stongswan PKI in openvpn."
@@ -326,6 +330,7 @@ openvpn_install()  {
 
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
+EASYRSA_VERSION="v3.0.6"
 check_root
 handle_args "$@"
 set_umask
