@@ -264,12 +264,9 @@ InitPKI_buildCA() {
 openvpn_config() {
   echo "you'll use openvpn and easyRSA as PKI tool"
   if [ "server" = "$VPN_MODE" ] ; then
+    echo "You'll configure opevpn server mode"
     cd /etc/openvpn/easyrsa
     echo "Now in /etc/openvpn/easyrsa"
-#    if [ ! -e /etc/openvpn/easyrsa/pki ] ; then
-#      echo "no PKI foler found,scripts will help you initial one"
-#      InitPKI_buildCA
-#    fi
     if  [ -e /etc/openvpn/easyrsa/pki/ca.crt ] ; then
       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
         echo "use current CA"
@@ -280,8 +277,16 @@ openvpn_config() {
     else
       InitPKI_buildCA
     fi
-    echo "now we have known CA is there, start to configure openvpn and stunnel4 as server mode"
-
+    echo "now we have known CA is there, start to generate server certs now!"
+    ./easyrsa gen-req server nopass
+    ./easyrsa sign server server
+    ./easyrsa gen-dh
+    echo "server cert have been generated. Scripts will help you generate a client cert which you can copy to your client PC"
+    echo "you can always generate specific user certs in server's PKI system by yourself later."
+    ./easyrsa gen-req client nopass
+    ./easyrsa sign client client
+  else
+    echo "you'll configure openvpn client mode now"
   fi
 }
 
