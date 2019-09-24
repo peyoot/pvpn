@@ -200,6 +200,11 @@ fi
 confirm_install() {
   echo "sctips are about to install software you choose"
   echo "you've chosen $VPN_TYPE"
+  echo "prepare some software packages for scripts to use"
+  if [ ! -e /usr/bin/zip ] ; then
+     apt update
+     apt install -y zip
+  fi
   if [ "openvpn" = "$VPN_TYPE" ] ; then
     openvpn_install
   else
@@ -280,11 +285,29 @@ openvpn_config() {
     echo "now we have known CA is there, start to generate server certs now!"
     ./easyrsa gen-req server nopass
     ./easyrsa sign server server
-    ./easyrsa gen-dh
+    if [ -e /etc/openvpn/easyrsa/pki/dh.pem ] ; then
+        if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+           echo "use current dh.pem"
+        else 
+           ./easyrsa gen-dh
+        fi
+     else
+        ./easyrsa gen-dh
+    fi
     echo "server cert have been generated. Scripts will help you generate a client cert which you can copy to your client PC"
     echo "you can always generate specific user certs in server's PKI system by yourself later."
     ./easyrsa gen-req client nopass
     ./easyrsa sign client client
+    if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
+      zip /tmp/clientcerts.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
+      if [ -e /snap/ffsend ] ; then
+        ffsend upload /tmp/clientcerts.zip 
+      else
+       echo "you need to download your clients cert and put it in client PC"
+      fi
+    else
+       echo "Please manually put client ca,key,cert in client PC"
+    fi
   else
     echo "you'll configure openvpn client mode now"
   fi
@@ -305,7 +328,7 @@ dualvpn_install() {
 openvpn_install()  {
 #for openvpn sole installation, need to  install easyrsa aswell
   if [ -e /etc/openvpn ] ; then
-   if prompt-yesno "openvpn already installed,reinstall it anyway?" "yes" ; then
+   if prompt-yesno "openvpn already installed,type yes if you want to reinstall it anyway?" "no" ; then
      apt update
      apt install -y openvpn stunnel4
    else
@@ -316,7 +339,7 @@ openvpn_install()  {
   if [ "openvpn" = "$VPN_TYPE" ] ; then
      echo "you're about to install easyRSA3 as PKI tool"
      if [ -e /etc/openvpn/easyrsa ] ; then
-       if prompt-yesno "easyrsa PKI already there, remove it fist and then download a new one?" "yes" ; then
+       if prompt-yesno "easyrsa PKI already there, type yes if you want to remove it first and then download a new one?" "no" ; then
          rm -rf /etc/openvpn/easyrsa*
          rm -rf  /tmp/EasyRSA*
          wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
