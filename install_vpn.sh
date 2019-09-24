@@ -301,7 +301,11 @@ openvpn_config() {
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       zip /tmp/clientcerts.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
       if [ -e /snap/ffsend ] ; then
-        ffsend upload /tmp/clientcerts.zip 
+        cp /tmp/clientcerts.zip ~
+        ffsend upload ~/clientcerts.zip
+        echo "removing clientcerts.zip copy in user home directory after shared by ffsend"
+        rm -rf ~/clientcerts.zip
+        rm -rf /tmp/clientcerts.zip
       else
        echo "you need to download your clients cert and put it in client PC"
       fi
