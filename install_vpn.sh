@@ -312,8 +312,86 @@ openvpn_config() {
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
+    echo "start to configure stunnel4 and openvpn server mode"
+    echo "copy server key and cert for stunnel4"
+    cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
+    cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
+#configure stunnel server here
+    echo -n "" > /etc/stunnel/stunnel.conf
+#   fetch_server_auth
+    echo "cert=/etc/stunnel/server.pem" >> /etc/stunnel/stunnel.conf
+    echo "key=/etc/stunnel/server.key" >> /etc/stunnel/stunnel.conf
+    echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
+    echo "accept =8443" >> /etc/stunnel/stunnel.conf
+    echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+#configure openvpn server here
+    echo -n "" > /etc/openvpn/server/server.conf
+    echo "port 11000" >> /etc/openvpn/server/server.conf
+    echo "proto tcp" >> /etc/openvpn/server/server.conf
+    echo "dev tap" >> /etc/openvpn/server/server.conf
+    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> /etc/openvpn/server/server.conf
+    echo "cert /etc/openvpn/easyrsa/pki/issued/server.crt" >> /etc/openvpn/server/server.conf
+    echo "key /etc/openvpn/easyrsa/pki/private/server.key" >> /etc/openvpn/server/server.conf
+    echo "dh /etc/openvpn/easyrsa/pki/dh2048.pem" >> /etc/openvpn/server/server.conf
+    echo "" >> /etc/openvpn/server/server.conf
+    echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server/server.conf
+    echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> /etc/openvpn/server/server.conf
+    echo "push \"redirect-gateway def1 bypass-dhcp\"" >> /etc/openvpn/server/server.conf
+    echo "push \"dhcp-option DNS 208.67.222.222\"" >> /etc/openvpn/server/server.conf
+    echo "client-to-client" >> /etc/openvpn/server/server.conf
+    echo "duplicate-cn" >> /etc/openvpn/server/server.conf
+    echo "keepalive 10 120" >> /etc/openvpn/server/server.conf
+    echo "compress lz4-v2" >> /etc/openvpn/server/server.conf
+    echo "max-clients 10" >>/etc/openvpn/server/server.conf
+    echo "user nobody" >> /etc/openvpn/server/server.conf
+    echo "group nobody" >> /etc/openvpn/server/server.conf
+    echo "persist-key" >> /etc/openvpn/server/server.conf
+    echo "persist-tun" >> /etc/openvpn/server/server.conf
+    echo "status /var/log/openvpn/openvpn-status.log" >> /etc/openvpn/server/server.conf
+    echo "verb 3" >> /etc/openvpn/server/server.conf
+    echo "mute 20" >> /etc/openvpn/server/server.conf
+    echo "explicit-exit-notify 1" >>/etc/openvpn/server/server.conf
+    echo "openVPN server configuration finished"
+    if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
+      systemctl enable openvpn-server@server
+    else
+      echo "You need to manually start your openvpn server by typing systemctl start openvpn-server@server"
+    fi
   else
-    echo "you'll configure openvpn client mode now"
+    echo "you'll configure stunnel4 and openvpn client mode now"
+    echo "configuring stunnel.conf"
+    echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
+    echo "client=yes" >> /etc/stunnel/stunnel.conf
+    echo "accept =127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+    echo "connect = serverIP:8443" >> /etc/stunnel/stunnel.conf
+#configure openvpn server here
+    echo "configuring openvpn client"
+    echo -n "" > /etc/openvpn/client/client.conf
+    echo "client" >> /etc/openvpn/client/client.conf
+    echo "proto tcp" >> /etc/openvpn/client/client.conf
+    echo "dev tap" >> /etc/openvpn/client/client.conf
+    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> /etc/openvpn/client/client.conf
+    echo "cert /etc/openvpn/easyrsa/pki/issued/client.crt" >> /etc/openvpn/client/client.conf
+    echo "key /etc/openvpn/easyrsa/pki/private/client.key" >> /etc/openvpn/client/client.conf
+    echo "remote 127.0.0.1 11000" >> /etc/openvpn/client/client.conf
+    echo "resolve-retry infinite" >> /etc/openvpn/client/client.conf
+    echo "nobind" >> /etc/openvpn/client/client.conf
+    echo "compress lz4-v2" >> /etc/openvpn/client/client.conf
+    echo "user nobody" >> /etc/openvpn/client/client.conf
+    echo "group nobody" >> /etc/openvpn/client/client.conf
+    echo "persist-key" >> /etc/openvpn/client/client.conf
+    echo "persist-tun" >> /etc/openvpn/client/client.conf
+    echo "mute 20" >> /etc/openvpn/client/client.conf
+    if prompt-yesno "would you like to auto start openvpn client service" "no"; then
+      echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
+      echo "when you start the VPN service, all trafic will go via vpn server as default route"
+    else
+      systemctl enable openvpn-client@client
+      echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
+
+    fi
+    echo "please put your ca/client certs into the right place of easyrsa/pki before you can use the openvpn client service"
+   
   fi
 }
 
@@ -360,13 +438,16 @@ openvpn_install()  {
   else
     echo "you'll use stongswan PKI in openvpn."
   fi
-  
+  echo "configure stunnel4 auto-start here"
+  if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
+    sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel4
+    echo "stunnel4 autostart enabled"
+  else
+    echo "you need to manual start stunnel service"
+  fi
+   
 }
 
-#vpn_client_install() {
-
-#    echo "about to install vpn client"
-#}
 
 ##### function block end #####
 
