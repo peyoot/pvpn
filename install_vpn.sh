@@ -317,6 +317,9 @@ openvpn_config() {
     cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
     cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
 #configure stunnel server here
+    echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
+    rm -rf /etc/stunnel/stunnel.conf
+    rm -rf /etc/openvpn/server/server.conf
     echo -n "" > /etc/stunnel/stunnel.conf
 #   fetch_server_auth
     echo "cert=/etc/stunnel/server.pem" >> /etc/stunnel/stunnel.conf
@@ -359,12 +362,15 @@ openvpn_config() {
     fi
   else
     echo "you'll configure stunnel4 and openvpn client mode now"
+    echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
+    rm -rf /etc/stunnel/stunnel.conf
+    rm -rf /etc/openvpn/server/server.conf
     echo "configuring stunnel.conf"
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
     echo "accept =127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
-    echo "connect = serverIP:8443" >> /etc/stunnel/stunnel.conf
-#configure openvpn server here
+    SERVER_URL=$(prompt "Please input the openvpn server IP:" "")
+    echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
     echo -n "" > /etc/openvpn/client/client.conf
     echo "client" >> /etc/openvpn/client/client.conf
@@ -413,7 +419,7 @@ openvpn_install()  {
   OVPN_EXIST="no"
   STUNNEL_EXIST="no"
   EASYRSA_EXIST="no"
-  if [ -e /etc/=stunnel ] ; then
+  if [ -e /etc/stunnel ] ; then
    if prompt-yesno "stunnel already installed,type yes if you want to reinstall it anyway?" "no" ; then
      echo "stunnel4 will be reinstalled"
    else
