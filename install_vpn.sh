@@ -388,13 +388,35 @@ openvpn_config() {
     echo "persist-key" >> /etc/openvpn/client/client.conf
     echo "persist-tun" >> /etc/openvpn/client/client.conf
     echo "mute 20" >> /etc/openvpn/client/client.conf
-    if prompt-yesno "would you like to auto start openvpn client service" "no"; then
-      echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
-      echo "when you start the VPN service, all trafic will go via vpn server as default route"
-    else
+    echo "prepare scripts to auto setup routes that need to go via local gateway"
+    rm -rf /etc/openvpn/client/nonvpn-routes.up
+    rm -rf /etc/openvpn/client/nonvpn-routes.down
+    echo "up /etc/openvpn/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
+    echo "down /etc/openvpn/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
+    echo -n "" > /etc/openvpn/client/nonvpn-routes.up
+    echo "echo \"set routes for china IP and VPNserver go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "LocalGW=\$(/sbin/route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "sleep 10"  >>  /etc/openvpn/client/nonvpn-routes.up
+    echo "/sbin/route add -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "/sbin/route add -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "/sbin/route add -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "/sbin/route add -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo -n "" > /etc/openvpn/client/nonvpn-routes.down
+    echo "echo \"delete routes for china IP and VPNserver go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "LocalGW=\$(/sbin/route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "sleep 10"  >>  /etc/openvpn/client/nonvpn-routes.down
+    echo "/sbin/route del -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "/sbin/route del -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "/sbin/route del -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "/sbin/route del -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
       systemctl enable openvpn-client@client
       echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
-
+      echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
+    else
+      systemctl disable openvpn-client@client
+      echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
+      echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi
     echo "please put your ca/client certs into the right place of easyrsa/pki before you can use the openvpn client service"
    
