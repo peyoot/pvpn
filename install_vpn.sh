@@ -408,29 +408,49 @@ dualvpn_install() {
 }
 
 openvpn_install()  {
-#for openvpn sole installation, need to  install easyrsa aswell
-  if [ -e /etc/openvpn ] ; then
-   if prompt-yesno "openvpn already installed,type yes if you want to reinstall it anyway?" "no" ; then
-     apt update
-     apt install -y openvpn stunnel4
+#for openvpn sole installation, need to  install easyrsa as well
+#check if openvpn and stunnel have already installed and set flag
+  OVPN_EXIST="no"
+  STUNNEL_EXIST="no"
+  EASYRSA_EXIST="no"
+  if [ -e /etc/=stunnel ] ; then
+   if prompt-yesno "stunnel already installed,type yes if you want to reinstall it anyway?" "no" ; then
+     echo "stunnel4 will be reinstalled"
    else
-     echo "Keep current openvpn installation"
+     STUNNEL_EXIST="yes"
+     echo "Scripts will use current stunnel4 installation"
    fi
   fi
-  echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
+  if [ -e /etc/openvpn ] ; then
+   if prompt-yesno "openvpn already installed,type yes if you want to reinstall it anyway?" "no" ; then
+     echo "openvpn will be reinstalled"
+   else
+     OVPN_EXIST="yes"
+     echo "Scripts will use current openvpn installation"
+   fi
+  fi
+  if [ "no" = "$STUNNEL_EXIST" ] ; then
+    apt update
+    apt install stunnel4
+  fi
+  if [ "no" = "$OVPN_EXIST" ] ; then
+    apt update
+    apt install openvpn
+  fi
+ 
+ echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
   if [ "openvpn" = "$VPN_TYPE" ] ; then
      echo "you're about to install easyRSA3 as PKI tool"
      if [ -e /etc/openvpn/easyrsa ] ; then
        if prompt-yesno "easyrsa PKI already there, type yes if you want to remove it first and then download a new one?" "no" ; then
          rm -rf /etc/openvpn/easyrsa*
          rm -rf  /tmp/EasyRSA*
-         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
-         tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
-         mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
        else  
+         EASYRSA_EXIST="yes"
          echo "you've chosen to use existing easyrsa as PKI"
        fi
-     else
+     fi
+     if [ "no" = "$EASYRSA_EXIST" ] ; then
        wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
        tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
        mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
@@ -438,6 +458,7 @@ openvpn_install()  {
   else
     echo "you'll use stongswan PKI in openvpn."
   fi
+
   echo "configure stunnel4 auto-start here"
   if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
     sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel4
