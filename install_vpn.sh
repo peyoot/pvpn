@@ -254,7 +254,7 @@ InitPKI_buildCA() {
     sleep 3
     echo "Easyrsa PKI initialed" 
     if [ ! -e /etc/openvpn/easyrsa/vars ] ; then
-      exec mv vars.example vars
+      mv vars.example vars
     fi
     echo "about to build CA"
     ./easyrsa build-ca nopass
