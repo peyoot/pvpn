@@ -201,10 +201,20 @@ confirm_install() {
   echo "sctips are about to install software you choose"
   echo "you've chosen $VPN_TYPE"
   echo "prepare some software packages for scripts to use"
+  apt update
   if [ ! -e /usr/bin/zip ] ; then
-     apt update
      apt install -y zip
   fi
+  if [ "server" = "$VPN_MODE" ] ; then
+    if prompt-yesno "Would you like to install ffsend so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
+        echo "ffsend will be installed via snap.It will take a while , please wait...."
+        sudo snap install ffsend
+        sleep 15
+    else
+        echo "you've bypass the ffsend installation. You'll need to manually copy client certs to client side later"
+    fi
+  fi
+  
   if [ "openvpn" = "$VPN_TYPE" ] ; then
     openvpn_install
   else
@@ -233,7 +243,7 @@ use_existingCA() {
     echo "Scripts will use CA file $CA_FILE"
   else 
     echo "CA doesn't exist"
-    if prompt-yesno "Palfort administrator can download it automatically. Would you like to download it? if you're not authorized, please type no" "no"; then
+    if prompt-yesno "Palfort administrator can download it automatically. Would you like to download it? if you're not authorized, please type no" "no" ; then
        download_CA
     else
         echo "please put your CA to $CA_FILE first and then try again. The installation now aborded"
@@ -323,7 +333,7 @@ openvpn_config() {
     cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
     cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
 #configure stunnel server here
-    echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
+    echo "Scripts will remove stunnel and openvpn config file first. " 
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf /etc/openvpn/server/server.conf
     echo -n "" > /etc/stunnel/stunnel.conf
