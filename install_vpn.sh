@@ -174,9 +174,10 @@ else
     CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to install?" "1")
   fi
   if [ "1" = "$CHOSEN_VPN_MODE" ] ; then
-    echo "VPN server mode was chosen"
+    echo "Select VPN server mode" | tee /var/log/pvpn_install.log
     VPN_MODE="server"
   else
+    echo "Select VPN client mode " | tee -a /var/log/pvpn_install.log
     VPN_MODE="client"
   fi
     
@@ -189,9 +190,10 @@ else
     CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "1")
   fi
   if [ "1" = "$CHOSEN_VPN_TYPE" ] ; then
-    echo "ONLY openvpn was chosen"
+    echo "Select openvpn over stunnel" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="openvpn"
   else
+    echo "Select both openvpn/stunnel and strongswan VPN" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="dualvpn"
   fi
 fi
@@ -201,15 +203,19 @@ confirm_install() {
   echo "sctips are about to install software you choose"
   echo "you've chosen $VPN_TYPE"
   echo "prepare some software packages for scripts to use"
+  echo "apt update" | tee -a /var/log/pvpn_install.log 
   apt update
   if [ ! -e /usr/bin/zip ] ; then
+     echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
   fi
   if [ "server" = "$VPN_MODE" ] ; then
     if prompt-yesno "Would you like to install ffsend so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
         echo "ffsend will be installed via snap.It will take a while , please wait...."
-        sudo snap install ffsend
-        sleep 15
+        echo "snap install ffsend" | tee -a /var/log/pvpn_install.log
+        snap install ffsend
+        echo "sleep 10" | tee -a /var/log/pvpn_install.log
+        sleep 10
     else
         echo "you've bypass the ffsend installation. You'll need to manually copy client certs to client side later"
     fi
@@ -315,9 +321,11 @@ openvpn_config() {
     ./easyrsa gen-req client nopass
     ./easyrsa sign client client
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
+      echo "zip ca.crt client.key,client.crt to clientcerts.zip"
       zip /tmp/clientcerts.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
       if [ -e /snap/ffsend ] ; then
         cp /tmp/clientcerts.zip ~
+        echo "ffsend upload clientcerts.zip and remove files"
         ffsend upload ~/clientcerts.zip
         echo "removing clientcerts.zip copy in user home directory after shared by ffsend"
         rm -rf ~/clientcerts.zip
@@ -442,10 +450,11 @@ openvpn_config() {
 
 dualvpn_install() {
   echo "about to install both strongswan and openvpn"
-  apt update
+  echo "apt install -y strongswan" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan 
   openvpn_install
   if ["dualvpn" = $VPN_TYPE] ; then
+    echo "apt install -y strongswan-pki" | tee -a /var/log/pvpn_install.log
     apt install -y strongswan-pki
   fi
 
@@ -474,12 +483,12 @@ openvpn_install()  {
    fi
   fi
   if [ "no" = "$STUNNEL_EXIST" ] ; then
-    apt update
-    apt install stunnel4
+    echo "apt install -y stunnel4 " | tee -a /var/log/pvpn_install.log
+    apt install -y stunnel4
   fi
   if [ "no" = "$OVPN_EXIST" ] ; then
-    apt update
-    apt install openvpn
+    echo "apt install -y openvpn" | tee -a /var/log/pvpn_install.log
+    apt install -y openvpn
   fi
  
  echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
@@ -495,6 +504,7 @@ openvpn_install()  {
        fi
      fi
      if [ "no" = "$EASYRSA_EXIST" ] ; then
+       echo "Download EasyRSA-unix-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
        wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
        tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
        mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
