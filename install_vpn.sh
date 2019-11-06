@@ -211,7 +211,7 @@ confirm_install() {
   fi
   if [ "server" = "$VPN_MODE" ] ; then
     if prompt-yesno "Would you like to install ffsend so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
-        echo "ffsend will be installed via snap.It will take a while , please wait...."
+        echo "ffsend will be installed via snap.It will take about 10 minutes , please wait...."
         echo "apt install -y snapd"
         apt install -y snapd
         echo "sleep 5"
@@ -350,7 +350,7 @@ openvpn_config() {
     rm -rf /etc/openvpn/server/server.conf
     echo -n "" > /etc/stunnel/stunnel.conf
 #   fetch_server_auth
-    echo "cert=/etc/stunnel/server.pem" >> /etc/stunnel/stunnel.conf
+    echo "cert=/etc/stunnel/server.crt" >> /etc/stunnel/stunnel.conf
     echo "key=/etc/stunnel/server.key" >> /etc/stunnel/stunnel.conf
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "accept =8443" >> /etc/stunnel/stunnel.conf
