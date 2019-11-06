@@ -212,10 +212,14 @@ confirm_install() {
   if [ "server" = "$VPN_MODE" ] ; then
     if prompt-yesno "Would you like to install ffsend so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
         echo "ffsend will be installed via snap.It will take a while , please wait...."
+        echo "apt install -y snapd"
+        apt install -y snapd
+        echo "sleep 5"
+        sleep 5
         echo "snap install ffsend" | tee -a /var/log/pvpn_install.log
         snap install ffsend
-        echo "sleep 10" | tee -a /var/log/pvpn_install.log
-        sleep 10
+        echo "sleep 5" | tee -a /var/log/pvpn_install.log
+        sleep 5
     else
         echo "you've bypass the ffsend installation. You'll need to manually copy client certs to client side later"
     fi
