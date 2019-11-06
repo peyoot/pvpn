@@ -363,7 +363,7 @@ openvpn_config() {
     echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> /etc/openvpn/server/server.conf
     echo "cert /etc/openvpn/easyrsa/pki/issued/server.crt" >> /etc/openvpn/server/server.conf
     echo "key /etc/openvpn/easyrsa/pki/private/server.key" >> /etc/openvpn/server/server.conf
-    echo "dh /etc/openvpn/easyrsa/pki/dh2048.pem" >> /etc/openvpn/server/server.conf
+    echo "dh /etc/openvpn/easyrsa/pki/dh.pem" >> /etc/openvpn/server/server.conf
     echo "" >> /etc/openvpn/server/server.conf
     echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server/server.conf
     echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> /etc/openvpn/server/server.conf
@@ -374,14 +374,14 @@ openvpn_config() {
     echo "keepalive 10 120" >> /etc/openvpn/server/server.conf
     echo "compress lz4-v2" >> /etc/openvpn/server/server.conf
     echo "max-clients 10" >>/etc/openvpn/server/server.conf
-    echo "user nobody" >> /etc/openvpn/server/server.conf
-    echo "group nobody" >> /etc/openvpn/server/server.conf
+    echo "# user nobody" >> /etc/openvpn/server/server.conf
+    echo "# group nobody" >> /etc/openvpn/server/server.conf
     echo "persist-key" >> /etc/openvpn/server/server.conf
     echo "persist-tun" >> /etc/openvpn/server/server.conf
     echo "status /var/log/openvpn/openvpn-status.log" >> /etc/openvpn/server/server.conf
     echo "verb 3" >> /etc/openvpn/server/server.conf
     echo "mute 20" >> /etc/openvpn/server/server.conf
-    echo "explicit-exit-notify 1" >>/etc/openvpn/server/server.conf
+    echo "# explicit-exit-notify 1" >>/etc/openvpn/server/server.conf
     echo "openVPN server configuration finished"
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable openvpn-server@server
@@ -411,8 +411,8 @@ openvpn_config() {
     echo "resolve-retry infinite" >> /etc/openvpn/client/client.conf
     echo "nobind" >> /etc/openvpn/client/client.conf
     echo "compress lz4-v2" >> /etc/openvpn/client/client.conf
-    echo "user nobody" >> /etc/openvpn/client/client.conf
-    echo "group nobody" >> /etc/openvpn/client/client.conf
+    echo "# user nobody" >> /etc/openvpn/client/client.conf
+    echo "# group nobody" >> /etc/openvpn/client/client.conf
     echo "persist-key" >> /etc/openvpn/client/client.conf
     echo "persist-tun" >> /etc/openvpn/client/client.conf
     echo "mute 20" >> /etc/openvpn/client/client.conf
