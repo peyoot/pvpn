@@ -423,20 +423,20 @@ openvpn_config() {
     echo "down /etc/openvpn/client/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
     echo -n "" > /etc/openvpn/client/nonvpn-routes.up
     echo "echo \"set routes for china IP and VPNserver go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "LocalGW=\$(/sbin/route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "LocalGW=\$(route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.up
     echo "sleep 10"  >>  /etc/openvpn/client/nonvpn-routes.up
-    echo "/sbin/route add -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "/sbin/route add -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "/sbin/route add -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "/sbin/route add -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "route add -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "route add -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "route add -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
+    echo "route add -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
     echo -n "" > /etc/openvpn/client/nonvpn-routes.down
     echo "echo \"delete routes for china IP and VPNserver go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "LocalGW=\$(/sbin/route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "LocalGW=\$(route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.down
     echo "sleep 10"  >>  /etc/openvpn/client/nonvpn-routes.down
-    echo "/sbin/route del -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "/sbin/route del -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "/sbin/route del -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "/sbin/route del -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "route del -net 114.114.114.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "route del -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "route del -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "route del -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
     echo "chmod a+x /etc/openvpn/client/nonvpn-routes.*"
     chmod a+x /etc/openvpn/client/nonvpn-routes.*
     if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
