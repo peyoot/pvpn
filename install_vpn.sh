@@ -210,7 +210,7 @@ confirm_install() {
      apt install -y zip
   fi
   if [ "server" = "$VPN_MODE" ] ; then
-    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL by firefox send?" "yes" ; then
+    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
         echo "webfs will be installed.please wait...."
         echo "apt install -y webfs"
         apt install -y webfs
