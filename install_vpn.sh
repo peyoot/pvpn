@@ -210,18 +210,16 @@ confirm_install() {
      apt install -y zip
   fi
   if [ "server" = "$VPN_MODE" ] ; then
-    if prompt-yesno "Would you like to install ffsend so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
-        echo "ffsend will be installed via snap.It will take about 10 minutes , please wait...."
-        echo "apt install -y snapd"
-        apt install -y snapd
-        echo "sleep 5"
-        sleep 5
-        echo "snap install ffsend" | tee -a /var/log/pvpn_install.log
-        snap install ffsend
-        echo "sleep 5" | tee -a /var/log/pvpn_install.log
-        sleep 5
+    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
+        echo "webfs will be installed.please wait...."
+        echo "apt install -y webfs"
+        apt install -y webfs
+        echo "sleep 1"
+        sleep 1
+        echo "mkdir /var/www/html" | tee -a /var/log/pvpn_install.log
+        echo "create /var/www/html for webfs"
     else
-        echo "you've bypass the ffsend installation. You'll need to manually copy client certs to client side later"
+        echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
     fi
   fi
   
@@ -327,15 +325,13 @@ openvpn_config() {
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to clientcerts.zip"
       zip /tmp/clientcerts.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
-      if [ -e /snap/ffsend ] ; then
-        cp /tmp/clientcerts.zip ~
-        echo "ffsend upload clientcerts.zip and remove files"
-        ffsend upload ~/clientcerts.zip
-        echo "removing clientcerts.zip copy in user home directory after shared by ffsend"
-        rm -rf ~/clientcerts.zip
+      if [ -e /var/www/html ] ; then
+        echo "put in webfs for downloads"
+        cp /tmp/clientcerts.zip /var/www/html/
+        echo "Please download from http://yourip/clientcerts.zip"
         rm -rf /tmp/clientcerts.zip
       else
-       echo "you need to download your clients cert and put it in client PC"
+       echo "you need to download your client certs (/tmp/clientcerts.zip) for the use in client PC"
       fi
     else
        echo "Please manually put client ca,key,cert in client PC"
