@@ -417,7 +417,7 @@ openvpn_config() {
     echo "prepare scripts to auto setup routes that need to go via local gateway"
     rm -rf /etc/openvpn/client/nonvpn-routes.up
     rm -rf /etc/openvpn/client/nonvpn-routes.down
-    echo "scripts-security 2" >> /etc/openvpn/client/client.conf
+    echo "script-security 2" >> /etc/openvpn/client/client.conf
     echo "up /etc/openvpn/client/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
     echo "down /etc/openvpn/client/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
     echo -n "" > /etc/openvpn/client/nonvpn-routes.up
