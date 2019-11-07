@@ -210,13 +210,14 @@ confirm_install() {
      apt install -y zip
   fi
   if [ "server" = "$VPN_MODE" ] ; then
-    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL by firefox send?" "no" ; then
+    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL by firefox send?" "yes" ; then
         echo "webfs will be installed.please wait...."
         echo "apt install -y webfs"
         apt install -y webfs
         echo "sleep 1"
         sleep 1
-        echo "mkdir /var/www/html" | tee -a /var/log/pvpn_install.log
+        echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
+        mkdir -p /var/www/html
         echo "create /var/www/html for webfs"
     else
         echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
