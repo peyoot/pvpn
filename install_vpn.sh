@@ -349,8 +349,9 @@ openvpn_config() {
 #   fetch_server_auth
     echo "cert=/etc/stunnel/server.crt" >> /etc/stunnel/stunnel.conf
     echo "key=/etc/stunnel/server.key" >> /etc/stunnel/stunnel.conf
+    echo "client=no" >> /etc/stunnel.conf
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
-    echo "accept =8443" >> /etc/stunnel/stunnel.conf
+    echo "accept = 8443" >> /etc/stunnel/stunnel.conf
     echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
 #configure openvpn server here
     echo -n "" > /etc/openvpn/server/server.conf
@@ -393,7 +394,7 @@ openvpn_config() {
     echo "configuring stunnel.conf"
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
-    echo "accept =127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+    echo "accept = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
     SERVER_URL=$(prompt "Please input the openvpn server IP:" "")
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
@@ -416,6 +417,7 @@ openvpn_config() {
     echo "prepare scripts to auto setup routes that need to go via local gateway"
     rm -rf /etc/openvpn/client/nonvpn-routes.up
     rm -rf /etc/openvpn/client/nonvpn-routes.down
+    echo "scripts-security 2" >> /etc/openvpn/client/client.conf
     echo "up /etc/openvpn/client/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
     echo "down /etc/openvpn/client/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
     echo -n "" > /etc/openvpn/client/nonvpn-routes.up
