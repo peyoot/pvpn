@@ -209,6 +209,7 @@ confirm_install() {
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
   fi
+  apt install -y net-tools
   if [ "server" = "$VPN_MODE" ] ; then
     if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
         echo "webfs will be installed.please wait...."
