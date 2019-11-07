@@ -434,6 +434,8 @@ openvpn_config() {
     echo "/sbin/route del -net 101.231.59.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
     echo "/sbin/route del -net 104.193.88.0 netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
     echo "/sbin/route del -net ${SERVER_URL} netmask 255.255.255.0 gw $LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "chmod a+x /etc/openvpn/client/nonvpn-routes.*"
+    chmod a+x /etc/openvpn/client/nonvpn-routes.*
     if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
       systemctl enable openvpn-client@client
       echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
@@ -442,9 +444,10 @@ openvpn_config() {
       systemctl disable openvpn-client@client
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
-    fi
+    fi 
     echo "please put your ca/client certs into the right place of easyrsa/pki before you can use the openvpn client service"
-   
+    echo "If you download clientcerts.zip from server, just run: unzip clientcerts.zip -d /etc/openvpn/easyrsa"
+    echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
   fi
 }
 
