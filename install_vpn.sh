@@ -328,7 +328,7 @@ openvpn_config() {
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
         cp /tmp/clientcerts.zip /var/www/html/
-        echo "Please download from http://yourip/clientcerts.zip"
+        echo "Please download from http://your-server-ip:8000/clientcerts.zip"
         rm -rf /tmp/clientcerts.zip
       else
        echo "you need to download your client certs (/tmp/clientcerts.zip) for the use in client PC"
