@@ -405,7 +405,7 @@ openvpn_config() {
     echo "cert /etc/openvpn/easyrsa/pki/issued/client.crt" >> /etc/openvpn/client/client.conf
     echo "key /etc/openvpn/easyrsa/pki/private/client.key" >> /etc/openvpn/client/client.conf
     echo "remote 127.0.0.1 11000" >> /etc/openvpn/client/client.conf
-    echo "resolve-retry infinite" >> /etc/openvpn/client/client.conf
+#    echo "resolve-retry infinite" >> /etc/openvpn/client/client.conf
     echo "nobind" >> /etc/openvpn/client/client.conf
     echo "compress lz4-v2" >> /etc/openvpn/client/client.conf
     echo "# user nobody" >> /etc/openvpn/client/client.conf
@@ -416,8 +416,8 @@ openvpn_config() {
     echo "prepare scripts to auto setup routes that need to go via local gateway"
     rm -rf /etc/openvpn/client/nonvpn-routes.up
     rm -rf /etc/openvpn/client/nonvpn-routes.down
-    echo "up /etc/openvpn/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
-    echo "down /etc/openvpn/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
+    echo "up /etc/openvpn/client/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
+    echo "down /etc/openvpn/client/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
     echo -n "" > /etc/openvpn/client/nonvpn-routes.up
     echo "echo \"set routes for china IP and VPNserver go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.up
     echo "LocalGW=\$(/sbin/route -n | grep eth0 | grep \"0.0.0.0         UG\" | awk '{print \$2}')" >> /etc/openvpn/client/nonvpn-routes.up
