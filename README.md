@@ -30,9 +30,9 @@ If you use it in Windows/Mac/Android, you'll need to install openvpn/stunnel man
 
 Change log:
 ----
-2016  pvpn_init finished. it support both openvpn over stunnel4 , and strongswan, but use seperate PKI CA. we'll try to use one PKI for both in install_vpn.sh. 
+2016  pvpn_init finished. it support both openvpn over stunnel4 , and strongswan, but use seperate PKI CA. 
 
-2019 add install_vpn.sh <br>
+2019 add install_vpn.sh It use openvpn and EASYRSA3. The goal is to use same PKI certs for both openvpn and strongswan<br>
 20191108  Openvpn over stunnel4 pass test.
 
 
