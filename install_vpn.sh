@@ -447,11 +447,11 @@ openvpn_config() {
     echo "   echo \"you need to manually delete route to vpn server via local gateway\n\"" >> /etc/openvpn/client/nonvpn-routes.down
     echo "   echo \"try run: route del host <server-ip> gw <gateway>\"" >> /etc/openvpn/client/nonvpn-routes.down
     echo "else" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "sleep 3"  >>  /etc/openvpn/client/nonvpn-routes.down
-    echo "route del -net 114.114.114.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "route del -net 101.231.59.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "route del -net 104.193.88.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "route del -host ${SERVER_URL} gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "  sleep 3"  >>  /etc/openvpn/client/nonvpn-routes.down
+    echo "  route del -net 114.114.114.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "  route del -net 101.231.59.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "  route del -net 104.193.88.0 netmask 255.255.255.0 gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
+    echo "  route del -host ${SERVER_URL} gw \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.down
     echo "fi" >> /etc/openvpn/client/nonvpn-routes.down 
     echo "chmod a+x /etc/openvpn/client/nonvpn-routes.*"
     chmod a+x /etc/openvpn/client/nonvpn-routes.*
