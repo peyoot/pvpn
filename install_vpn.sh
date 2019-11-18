@@ -328,12 +328,15 @@ openvpn_config() {
     ./easyrsa sign client client
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to clientcerts.zip"
-      zip /tmp/clientcerts.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
+      zip /tmp/client_pki_certs.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
+      cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
+      zip /tmp/clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
         cp /tmp/clientcerts.zip /var/www/html/
+        cp /tmp/client_pki_certs.zip /var/www/html/
         echo "Please download from http://your-server-ip:8000/clientcerts.zip"
-        rm -rf /tmp/clientcerts.zip
+        rm -rf  /tmp/ca.crt /tmp/client*
       else
        echo "you need to download your client certs (/tmp/clientcerts.zip) for the use in client PC"
       fi
@@ -349,10 +352,12 @@ openvpn_config() {
       OVPN_CONFIG_DIR="/etc/openvpn/server"
       OVPN_SERVICE="openvpn-server@server"
       OVPN_COMPRESS="compress lz4-v2"
+      OVPN_LOG_DIR="/var/log/openvpn"
     else 
       OVPN_CONFIG_DIR="/etc/openvpn"
       OVPN_SERVICE="openvpn@server"
       OVPN_COMPRESS="comp-lzo"
+      OVPN_LOG_DIR="/var/log"
     fi
 
 
@@ -379,7 +384,7 @@ openvpn_config() {
     echo "dh /etc/openvpn/easyrsa/pki/dh.pem" >> $OVPN_CONFIG_DIR/server.conf
     echo "" >> $OVPN_CONFIG_DIR/server.conf
     echo "server 10.8.0.0 255.255.255.0" >> $OVPN_CONFIG_DIR/server.conf
-    echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_DIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_DIR/server.conf
     echo "push \"dhcp-option DNS 208.67.222.222\"" >> $OVPN_CONFIG_DIR/server.conf
     echo "client-to-client" >> $OVPN_CONFIG_DIR/server.conf
@@ -391,10 +396,10 @@ openvpn_config() {
     echo "# group nobody" >> $OVPN_CONFIG_DIR/server.conf
     echo "persist-key" >> $OVPN_CONFIG_DIR/server.conf
     echo "persist-tun" >> $OVPN_CONFIG_DIR/server.conf
-    echo "status /var/log/openvpn/openvpn-status.log" >> $OVPN_CONFIG_DIR/server.conf
+    echo "status $OVPN_LOG_DIR/openvpn-status.log" >> $OVPN_CONFIG_DIR/server.conf
     echo "verb 3" >> $OVPN_CONFIG_DIR/server.conf
     echo "mute 20" >> $OVPN_CONFIG_DIR/server.conf
-    echo "# explicit-exit-notify 1" >>$OVPN_CONFIG_DIR/server.conf
+    echo "# explicit-exit-notify 1" >> $OVPN_CONFIG_DIR/server.conf
     echo "openVPN server configuration finished"
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable $OVPN_SERVICE
