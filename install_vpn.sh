@@ -348,9 +348,11 @@ openvpn_config() {
     if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/server"
       OVPN_SERVICE="openvpn-server@server"
+      OVPN_COMPRESS="compress lz4-v2"
     else 
       OVPN_CONFIG_DIR="/etc/openvpn"
       OVPN_SERVICE="openvpn@server"
+      OVPN_COMPRESS="comp-lzo"
     fi
 
 
@@ -383,7 +385,7 @@ openvpn_config() {
     echo "client-to-client" >> $OVPN_CONFIG_DIR/server.conf
     echo "duplicate-cn" >> $OVPN_CONFIG_DIR/server.conf
     echo "keepalive 10 120" >> $OVPN_CONFIG_DIR/server.conf
-    echo "compress lz4-v2" >> $OVPN_CONFIG_DIR/server.conf
+    echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_DIR/server.conf
     echo "max-clients 10" >>$OVPN_CONFIG_DIR/server.conf
     echo "# user nobody" >> $OVPN_CONFIG_DIR/server.conf
     echo "# group nobody" >> $OVPN_CONFIG_DIR/server.conf
@@ -405,9 +407,11 @@ openvpn_config() {
     if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/client"
       OVPN_SERVICE="openvpn-client@client"
+      OVPN_COMPRESS="compress lz4-v2"
     else
       OVPN_CONFIG_DIR="/etc/openvpn"
       OVPN_SERVICE="openvpn@client"
+      OVPN_COMPRESS="comp-lzo"
     fi
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf $OVPN_CONFIG_DIR/server.conf
@@ -428,7 +432,7 @@ openvpn_config() {
     echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_DIR/client.conf
     echo "resolv-retry infinite" >> $OVPN_CONFIG_DIR/client.conf
     echo "nobind" >> $OVPN_CONFIG_DIR/client.conf
-    echo "compress lz4-v2" >> $OVPN_CONFIG_DIR/client.conf
+    echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_DIR/client.conf
     echo "# user nobody" >> $OVPN_CONFIG_DIR/client.conf
     echo "# group nobody" >> $OVPN_CONFIG_DIR/client.conf
     echo "persist-key" >> $OVPN_CONFIG_DIR/client.conf
