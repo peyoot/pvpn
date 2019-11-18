@@ -345,10 +345,12 @@ openvpn_config() {
     cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
     cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
 
-    if [ "18.04" = $UBUNTU_VERSION ]; then
+    if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/server"
+      OVPN_SERVICE="openvpn-server@server"
     else 
       OVPN_CONFIG_DIR="/etc/openvpn"
+      OVPN_SERVICE="openvpn@server"
     fi
 
 
@@ -393,17 +395,19 @@ openvpn_config() {
     echo "# explicit-exit-notify 1" >>$OVPN_CONFIG_DIR/server.conf
     echo "openVPN server configuration finished"
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
-      systemctl enable openvpn-server@server
+      systemctl enable $OVPN_SERVICE
     else
       echo "You need to manually start your openvpn server by typing systemctl start openvpn-server@server"
     fi
   else
     echo "you'll configure stunnel4 and openvpn client mode now"
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
-    if [ "18.04" = $UBUNTU_VERSION ]; then
+    if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/client"
+      OVPN_SERVICE="openvpn-client@client"
     else
       OVPN_CONFIG_DIR="/etc/openvpn"
+      OVPN_SERVICE="openvpn@client"
     fi
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf $OVPN_CONFIG_DIR/server.conf
@@ -455,12 +459,13 @@ openvpn_config() {
     echo "ip route del ${SERVER_URL}/32" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
     echo "chmod a+x $OVPN_CONFIG_DIR/nonvpn-routes.*"
     chmod a+x $OVPN_CONFIG_DIR/nonvpn-routes.*
+
     if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
-      systemctl enable openvpn-client@client
+      systemctl enable $OVPN_SERVICE
       echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
     else
-      systemctl disable openvpn-client@client
+      systemctl disable $OVPN_SERVICE
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi 
