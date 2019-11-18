@@ -155,6 +155,8 @@ check_root() {
 }
 
 prepare_installation_paras() {
+#check out ubuntu version
+UBUNTU_VERSION='lsb_release --release | cut -f2'
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
    VPN_TYPE="dual"
@@ -342,10 +344,18 @@ openvpn_config() {
     echo "copy server key and cert for stunnel4"
     cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
     cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
+
+    if [ "18.04" = $UBUNTU_VERSION ]; then
+      OVPN_CONFIG_DIR="/etc/openvpn/server"
+    else 
+      OVPN_CONFIG_DIR="/etc/openvpn"
+    fi
+
+
 #configure stunnel server here
     echo "Scripts will remove stunnel and openvpn config file first. " 
     rm -rf /etc/stunnel/stunnel.conf
-    rm -rf /etc/openvpn/server/server.conf
+    rm -rf $OVPN_CONFIG_DIR/server.conf
     echo -n "" > /etc/stunnel/stunnel.conf
 #   fetch_server_auth
     echo "cert=/etc/stunnel/server.crt" >> /etc/stunnel/stunnel.conf
@@ -355,32 +365,32 @@ openvpn_config() {
     echo "accept = 8443" >> /etc/stunnel/stunnel.conf
     echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
 #configure openvpn server here
-    echo -n "" > /etc/openvpn/server/server.conf
-    echo "port 11000" >> /etc/openvpn/server/server.conf
-    echo "proto tcp" >> /etc/openvpn/server/server.conf
-    echo "dev tap" >> /etc/openvpn/server/server.conf
-    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> /etc/openvpn/server/server.conf
-    echo "cert /etc/openvpn/easyrsa/pki/issued/server.crt" >> /etc/openvpn/server/server.conf
-    echo "key /etc/openvpn/easyrsa/pki/private/server.key" >> /etc/openvpn/server/server.conf
-    echo "dh /etc/openvpn/easyrsa/pki/dh.pem" >> /etc/openvpn/server/server.conf
-    echo "" >> /etc/openvpn/server/server.conf
-    echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server/server.conf
-    echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> /etc/openvpn/server/server.conf
-    echo "push \"redirect-gateway def1 bypass-dhcp\"" >> /etc/openvpn/server/server.conf
-    echo "push \"dhcp-option DNS 208.67.222.222\"" >> /etc/openvpn/server/server.conf
-    echo "client-to-client" >> /etc/openvpn/server/server.conf
-    echo "duplicate-cn" >> /etc/openvpn/server/server.conf
-    echo "keepalive 10 120" >> /etc/openvpn/server/server.conf
-    echo "compress lz4-v2" >> /etc/openvpn/server/server.conf
-    echo "max-clients 10" >>/etc/openvpn/server/server.conf
-    echo "# user nobody" >> /etc/openvpn/server/server.conf
-    echo "# group nobody" >> /etc/openvpn/server/server.conf
-    echo "persist-key" >> /etc/openvpn/server/server.conf
-    echo "persist-tun" >> /etc/openvpn/server/server.conf
-    echo "status /var/log/openvpn/openvpn-status.log" >> /etc/openvpn/server/server.conf
-    echo "verb 3" >> /etc/openvpn/server/server.conf
-    echo "mute 20" >> /etc/openvpn/server/server.conf
-    echo "# explicit-exit-notify 1" >>/etc/openvpn/server/server.conf
+    echo -n "" > $OVPN_CONFIG_DIR/server.conf
+    echo "port 11000" >> $OVPN_CONFIG_DIR/server.conf
+    echo "proto tcp" >> $OVPN_CONFIG_DIR/server.conf
+    echo "dev tap" >> $OVPN_CONFIG_DIR/server.conf
+    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "cert /etc/openvpn/easyrsa/pki/issued/server.crt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "key /etc/openvpn/easyrsa/pki/private/server.key" >> $OVPN_CONFIG_DIR/server.conf
+    echo "dh /etc/openvpn/easyrsa/pki/dh.pem" >> $OVPN_CONFIG_DIR/server.conf
+    echo "" >> $OVPN_CONFIG_DIR/server.conf
+    echo "server 10.8.0.0 255.255.255.0" >> $OVPN_CONFIG_DIR/server.conf
+    echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_DIR/server.conf
+    echo "push \"dhcp-option DNS 208.67.222.222\"" >> $OVPN_CONFIG_DIR/server.conf
+    echo "client-to-client" >> $OVPN_CONFIG_DIR/server.conf
+    echo "duplicate-cn" >> $OVPN_CONFIG_DIR/server.conf
+    echo "keepalive 10 120" >> $OVPN_CONFIG_DIR/server.conf
+    echo "compress lz4-v2" >> $OVPN_CONFIG_DIR/server.conf
+    echo "max-clients 10" >>$OVPN_CONFIG_DIR/server.conf
+    echo "# user nobody" >> $OVPN_CONFIG_DIR/server.conf
+    echo "# group nobody" >> $OVPN_CONFIG_DIR/server.conf
+    echo "persist-key" >> $OVPN_CONFIG_DIR/server.conf
+    echo "persist-tun" >> $OVPN_CONFIG_DIR/server.conf
+    echo "status /var/log/openvpn/openvpn-status.log" >> $OVPN_CONFIG_DIR/server.conf
+    echo "verb 3" >> $OVPN_CONFIG_DIR/server.conf
+    echo "mute 20" >> $OVPN_CONFIG_DIR/server.conf
+    echo "# explicit-exit-notify 1" >>$OVPN_CONFIG_DIR/server.conf
     echo "openVPN server configuration finished"
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable openvpn-server@server
@@ -390,8 +400,13 @@ openvpn_config() {
   else
     echo "you'll configure stunnel4 and openvpn client mode now"
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
+    if [ "18.04" = $UBUNTU_VERSION ]; then
+      OVPN_CONFIG_DIR="/etc/openvpn/client"
+    else
+      OVPN_CONFIG_DIR="/etc/openvpn"
+    fi
     rm -rf /etc/stunnel/stunnel.conf
-    rm -rf /etc/openvpn/server/server.conf
+    rm -rf $OVPN_CONFIG_DIR/server.conf
     echo "configuring stunnel.conf"
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
@@ -399,47 +414,47 @@ openvpn_config() {
     SERVER_URL=$(prompt "Please input the openvpn server IP:" "")
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
-    echo -n "" > /etc/openvpn/client/client.conf
-    echo "client" >> /etc/openvpn/client/client.conf
-    echo "proto tcp" >> /etc/openvpn/client/client.conf
-    echo "dev tap" >> /etc/openvpn/client/client.conf
-    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> /etc/openvpn/client/client.conf
-    echo "cert /etc/openvpn/easyrsa/pki/issued/client.crt" >> /etc/openvpn/client/client.conf
-    echo "key /etc/openvpn/easyrsa/pki/private/client.key" >> /etc/openvpn/client/client.conf
-    echo "remote 127.0.0.1 11000" >> /etc/openvpn/client/client.conf
-    echo "resolv-retry infinite" >> /etc/openvpn/client/client.conf
-    echo "nobind" >> /etc/openvpn/client/client.conf
-    echo "compress lz4-v2" >> /etc/openvpn/client/client.conf
-    echo "# user nobody" >> /etc/openvpn/client/client.conf
-    echo "# group nobody" >> /etc/openvpn/client/client.conf
-    echo "persist-key" >> /etc/openvpn/client/client.conf
-    echo "persist-tun" >> /etc/openvpn/client/client.conf
-    echo "mute 20" >> /etc/openvpn/client/client.conf
+    echo -n "" > $OVPN_CONFIG_DIR/client.conf
+    echo "client" >> $OVPN_CONFIG_DIR/client.conf
+    echo "proto tcp" >> $OVPN_CONFIG_DIR/client.conf
+    echo "dev tap" >> $OVPN_CONFIG_DIR/client.conf
+    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> $OVPN_CONFIG_DIR/client.conf
+    echo "cert /etc/openvpn/easyrsa/pki/issued/client.crt" >> $OVPN_CONFIG_DIR/client.conf
+    echo "key /etc/openvpn/easyrsa/pki/private/client.key" >> $OVPN_CONFIG_DIR/client.conf
+    echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_DIR/client.conf
+    echo "resolv-retry infinite" >> $OVPN_CONFIG_DIR/client.conf
+    echo "nobind" >> $OVPN_CONFIG_DIR/client.conf
+    echo "compress lz4-v2" >> $OVPN_CONFIG_DIR/client.conf
+    echo "# user nobody" >> $OVPN_CONFIG_DIR/client.conf
+    echo "# group nobody" >> $OVPN_CONFIG_DIR/client.conf
+    echo "persist-key" >> $OVPN_CONFIG_DIR/client.conf
+    echo "persist-tun" >> $OVPN_CONFIG_DIR/client.conf
+    echo "mute 20" >> $OVPN_CONFIG_DIR/client.conf
     echo "prepare scripts to auto setup routes that need to go via local gateway"
-    rm -rf /etc/openvpn/client/nonvpn-routes.up
-    rm -rf /etc/openvpn/client/nonvpn-routes.down
-    echo "script-security 2" >> /etc/openvpn/client/client.conf
-    echo "up /etc/openvpn/client/nonvpn-routes.up" >> /etc/openvpn/client/client.conf
-    echo "down /etc/openvpn/client/nonvpn-routes.down" >> /etc/openvpn/client/client.conf
-    echo -n "" > /etc/openvpn/client/nonvpn-routes.up
-    echo "#!/bin/bash" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "LocalGW=\$(ip route | grep default | awk '{print \$3}')" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "sleep 3"  >>  /etc/openvpn/client/nonvpn-routes.up
-    echo "ip route add 114.114.114.0/24 via \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "ip route add 101.231.59.0/24 via \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "ip route add 104.193.88.0/24 via \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo "ip route add ${SERVER_URL}/32 via \$LocalGW" >> /etc/openvpn/client/nonvpn-routes.up
-    echo -n "" > /etc/openvpn/client/nonvpn-routes.down
-    echo "#!/bin/bash" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "echo \"delete routes for VPNserver and some local IP that need go via local gateway\"" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "sleep 3"  >>  /etc/openvpn/client/nonvpn-routes.down
-    echo "ip route del 114.114.114.0/24" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "ip route del 101.231.59.0/24" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "ip route del 104.193.88.0/24" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "ip route del ${SERVER_URL}/32" >> /etc/openvpn/client/nonvpn-routes.down
-    echo "chmod a+x /etc/openvpn/client/nonvpn-routes.*"
-    chmod a+x /etc/openvpn/client/nonvpn-routes.*
+    rm -rf $OVPN_CONFIG_DIR/nonvpn-routes.up
+    rm -rf $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "script-security 2" >> $OVPN_CONFIG_DIR/client.conf
+    echo "up $OVPN_CONFIG_DIR/nonvpn-routes.up" >> $OVPN_CONFIG_DIR/client.conf
+    echo "down $OVPN_CONFIG_DIR/nonvpn-routes.down" >> $OVPN_CONFIG_DIR/client.conf
+    echo -n "" > $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "#!/bin/bash" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "LocalGW=\$(ip route | grep default | awk '{print \$3}')" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "sleep 3"  >>  $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "ip route add 114.114.114.0/24 via \$LocalGW" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "ip route add 101.231.59.0/24 via \$LocalGW" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "ip route add 104.193.88.0/24 via \$LocalGW" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo "ip route add ${SERVER_URL}/32 via \$LocalGW" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
+    echo -n "" > $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "#!/bin/bash" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "echo \"delete routes for VPNserver and some local IP that need go via local gateway\"" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "sleep 3"  >>  $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "ip route del 114.114.114.0/24" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "ip route del 101.231.59.0/24" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "ip route del 104.193.88.0/24" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "ip route del ${SERVER_URL}/32" >> $OVPN_CONFIG_DIR/nonvpn-routes.down
+    echo "chmod a+x $OVPN_CONFIG_DIR/nonvpn-routes.*"
+    chmod a+x $OVPN_CONFIG_DIR/nonvpn-routes.*
     if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
       systemctl enable openvpn-client@client
       echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
