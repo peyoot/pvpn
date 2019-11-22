@@ -285,7 +285,7 @@ InitPKI_buildCA() {
   else
     echo "Initial ipsec pki and build CA now"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
     echo "CA key and CA cert generated"
 
   fi
