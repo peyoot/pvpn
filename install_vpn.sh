@@ -308,7 +308,7 @@ dualvpn_config() {
     fi
     echo "now we have known CA is there, start to generate server certs now!"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-    ipsec pki --issue --in /etc/ipsec.d/private/serverkey.pem --type priv --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --san server > /etc/ipsec.d/certs/servercert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
     echo "Server cert has been generated now"
 
 }
