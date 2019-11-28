@@ -320,6 +320,7 @@ dualvpn_config() {
     mkdir -p /tmp/ipsec.d/private
     ls|grep -v cakey.pem|grep -v serverkey.pem|xargs -i cp -rp {} /tmp/ipsec.d/private/
     mkdir -p /tmp/ipsec.d/cacerts
+    mkdir -p /tmp/ipsec.d/certs
     cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
     cd /etc/ipsec.d/certs/
     ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
