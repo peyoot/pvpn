@@ -314,8 +314,17 @@ dualvpn_config() {
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
     ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=${CLIENT_USER}" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
-    echo "You've generated the client cert.Scripts will help you pack it"
-    cp --parent -rf 'ls /etc/ipsec.d/private | grep -E -v "^(cakey.pem|serverkey.pem)$"' /tmp/
+    echo "You've generated the client cert. Scripts will help you pack it"
+    WORK_DIR=$(pwd)
+    cd /etc/ipsec.d/private
+    mkdir -p /tmp/ipsec.d/private
+    ls|grep -v cakey.pem|grep -v serverkey.pem|xargs -i cp -rp {} /tmp/ipsec.d/private/
+    mkdir -p /tmp/ipsec.d/cacerts
+    cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
+    cd /etc/ipsec.d/certs/
+    ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
+    cd $WORK_DIR
+    echo "now in  ${WORK_DIR}"
 
 }
 
