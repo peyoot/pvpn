@@ -533,7 +533,7 @@ dualvpn_install() {
   openvpn_install
   echo "apt install -y strongswan-pki" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan-pki
-  dualvpn_config
+
 }
 
 openvpn_install()  {
