@@ -329,8 +329,8 @@ dualvpn_config() {
     ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
     echo "pack ipsec pki client certs"
     cd /tmp
-    zip client-ipsec.zip ./ipsec.d/*
-    zip -j clientcerts.zip ./ipsec.d/*
+    zip -r client-ipsec.zip ./ipsec.d/*
+    zip -j clientcerts.zip ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
    cd $WORK_DIR
     echo "now in  ${WORK_DIR}"
 
