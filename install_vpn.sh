@@ -295,7 +295,6 @@ InitPKI_buildCA() {
 }
 
 dualvpn_config() {
-   NEEDPKICA="yes"
    echo "you'll use ipsec pki"
    if [ -e /etc/ipsec.d/cacerts/ca.crt ] ; then
       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
@@ -330,15 +329,16 @@ dualvpn_config() {
     echo "pack ipsec pki client certs"
     cd /tmp
     zip -r client-ipsec.zip ./ipsec.d/*
-    zip -j clientcerts.zip ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
-   cd $WORK_DIR
+    rm -rf /tmp/ipsec*
+    openssl dhparam -out dh.pem 2048
+    zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+    cd $WORK_DIR
     echo "now in  ${WORK_DIR}"
 
 }
 
 
 openvpn_config() {
-  NEEDPKICA="yes"
   echo "you'll use openvpn and easyRSA as PKI tool"
   if [ "server" = "$VPN_MODE" ] ; then
     echo "You'll configure opevpn server mode"
