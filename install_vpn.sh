@@ -527,8 +527,9 @@ openvpn_config() {
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi 
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
-    echo "If you download clientcerts.zip from http://${SERVER_url}:8000/, just run: sudo unzip clientcerts.zip -d /etc/openvpn/"
-    echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
+    echo "If you download clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j clientcerts.zip -d /etc/openvpn/"
+    echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
+    echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
 }
 
