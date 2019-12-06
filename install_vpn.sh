@@ -379,7 +379,7 @@ openvpn_config() {
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
-      zip /tmp/clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
+      zip -j /tmp/clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
         cp /tmp/clientcerts.zip /var/www/html/
@@ -526,8 +526,8 @@ openvpn_config() {
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi 
-    echo "please put your ca/client certs into the right place of easyrsa/pki before you can use the openvpn client service"
-    echo "If you download clientcerts.zip from server, just run: unzip clientcerts.zip -d /etc/openvpn/easyrsa"
+    echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
+    echo "If you download clientcerts.zip from http://${SERVER_url}:8000/, just run: sudo unzip clientcerts.zip -d /etc/openvpn/"
     echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
   fi
 }
