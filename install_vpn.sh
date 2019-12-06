@@ -327,7 +327,11 @@ dualvpn_config() {
     cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
     cd /etc/ipsec.d/certs/
     ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
-    cd $WORK_DIR
+    echo "pack ipsec pki client certs"
+    cd /tmp
+    zip client-ipsec.zip ./ipsec.d/*
+    zip -j clientcerts.zip ./ipsec.d/*
+   cd $WORK_DIR
     echo "now in  ${WORK_DIR}"
 
 }
