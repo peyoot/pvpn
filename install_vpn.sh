@@ -157,6 +157,9 @@ check_root() {
 prepare_installation_paras() {
 #check out ubuntu version
 UBUNTU_VERSION='lsb_release --release | cut -f2'
+#set necessary variables
+NEEDPKICA="yes"
+NEEDDH="yes"
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
    VPN_TYPE="dual"
@@ -247,7 +250,7 @@ confirm_setting() {
 
 use_existingCA() {
   if [ "openvpn" = "$VPN_TYPE" ] ; then
-    CA_FILE="/etc/openvpn/easyrsa3/pki/ca.crt"
+    CA_FILE="/etc/openvpn/ca.crt"
   else 
     CA_FILE="/etc/ipsec.d/cacerts/ca.crt"
   fi
@@ -337,7 +340,7 @@ openvpn_config() {
     echo "You'll configure opevpn server mode"
     cd /etc/openvpn/easyrsa
     echo "Now in /etc/openvpn/easyrsa"
-    if  [ -e /etc/openvpn/easyrsa/pki/ca.crt ] ; then
+    if  [ -e /etc/openvpn/ca.crt ] ; then
       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
         echo "use current CA"
         NEEDPKICA="no"
@@ -348,19 +351,25 @@ openvpn_config() {
     if [ "yes" = "$NEEDPKICA" ] ; then
       InitPKI_buildCA
       sleep 1
+      echo "copy ca.crt to config folder"
+      cp  ./pki/ca.crt /etc/openvpn/
     fi
     echo "now we have known CA is there, start to generate server certs now!"
     ./easyrsa gen-req server nopass
     sleep 1
     ./easyrsa sign server server
-    if [ -e /etc/openvpn/easyrsa/pki/dh.pem ] ; then
+    echo "copy server key and cert to config folder"
+    cp  ./pki/private/server.key ./pki/issued/server.crt  /etc/openvpn/
+    if [ -e /etc/openvpn/dh.pem ] ; then
         if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
            echo "use current dh.pem"
-        else 
-           ./easyrsa gen-dh
+           NEEDDH="no"
         fi
-     else
-        ./easyrsa gen-dh
+    fi
+    if [ "yes" = "$NEDDDH" ] ; then
+      ./easyrsa gen-dh
+      echo "copy dh to config folder"
+      cp ./pki/dh.pem /etc/openvpn/
     fi
     sleep 3
     echo "server cert have been generated. Scripts will help you generate a client cert which you can copy to your client PC"
@@ -369,13 +378,11 @@ openvpn_config() {
     ./easyrsa sign client client
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to clientcerts.zip"
-      zip /tmp/client_pki_certs.zip ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
       zip /tmp/clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
         cp /tmp/clientcerts.zip /var/www/html/
-        cp /tmp/client_pki_certs.zip /var/www/html/
         echo "Please download from http://your-server-ip:8000/clientcerts.zip"
         rm -rf  /tmp/ca.crt /tmp/client*
       else
@@ -386,8 +393,8 @@ openvpn_config() {
     fi
     echo "start to configure stunnel4 and openvpn server mode"
     echo "copy server key and cert for stunnel4"
-    cp /etc/openvpn/easyrsa/pki/issued/server.crt /etc/stunnel/
-    cp /etc/openvpn/easyrsa/pki/private/server.key /etc/stunnel/
+    cp /etc/openvpn/server.crt /etc/stunnel/
+    cp /etc/openvpn/server.key /etc/stunnel/
 
     if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/server"
@@ -419,10 +426,10 @@ openvpn_config() {
     echo "port 11000" >> $OVPN_CONFIG_DIR/server.conf
     echo "proto tcp" >> $OVPN_CONFIG_DIR/server.conf
     echo "dev tap" >> $OVPN_CONFIG_DIR/server.conf
-    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> $OVPN_CONFIG_DIR/server.conf
-    echo "cert /etc/openvpn/easyrsa/pki/issued/server.crt" >> $OVPN_CONFIG_DIR/server.conf
-    echo "key /etc/openvpn/easyrsa/pki/private/server.key" >> $OVPN_CONFIG_DIR/server.conf
-    echo "dh /etc/openvpn/easyrsa/pki/dh.pem" >> $OVPN_CONFIG_DIR/server.conf
+    echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "cert /etc/openvpn/server.crt" >> $OVPN_CONFIG_DIR/server.conf
+    echo "key /etc/openvpn/server.key" >> $OVPN_CONFIG_DIR/server.conf
+    echo "dh /etc/openvpn/dh.pem" >> $OVPN_CONFIG_DIR/server.conf
     echo "" >> $OVPN_CONFIG_DIR/server.conf
     echo "server 10.8.0.0 255.255.255.0" >> $OVPN_CONFIG_DIR/server.conf
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_DIR/server.conf
@@ -472,9 +479,9 @@ openvpn_config() {
     echo "client" >> $OVPN_CONFIG_DIR/client.conf
     echo "proto tcp" >> $OVPN_CONFIG_DIR/client.conf
     echo "dev tap" >> $OVPN_CONFIG_DIR/client.conf
-    echo "ca /etc/openvpn/easyrsa/pki/ca.crt" >> $OVPN_CONFIG_DIR/client.conf
-    echo "cert /etc/openvpn/easyrsa/pki/issued/client.crt" >> $OVPN_CONFIG_DIR/client.conf
-    echo "key /etc/openvpn/easyrsa/pki/private/client.key" >> $OVPN_CONFIG_DIR/client.conf
+    echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_DIR/client.conf
+    echo "cert /etc/openvpn/client.crt" >> $OVPN_CONFIG_DIR/client.conf
+    echo "key /etc/openvpn/client.key" >> $OVPN_CONFIG_DIR/client.conf
     echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_DIR/client.conf
     echo "resolv-retry infinite" >> $OVPN_CONFIG_DIR/client.conf
     echo "nobind" >> $OVPN_CONFIG_DIR/client.conf
