@@ -288,7 +288,7 @@ InitPKI_buildCA() {
   else
     echo "Initial ipsec pki and build CA now"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/ca.crt
     echo "CA key and CA cert generated"
 
   fi
@@ -340,12 +340,12 @@ generate_certs() {
   else
 #use ipsec to generte certs
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/ca.crt --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
     echo "Server cert has been generated now"
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/ca.crt --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       WORK_DIR=$(pwd)
       cd /etc/ipsec.d/private
