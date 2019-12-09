@@ -360,8 +360,18 @@ generate_certs() {
       cd /tmp
       zip -r client-ipsec.zip ./ipsec.d/*
       rm -rf /tmp/ipsec*
-      openssl dhparam -out dh.pem 2048
+
+      if [ -e /etc/openvpn/dh.pem ] ; then
+          if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+             echo "use current dh.pem"
+             NEEDDH="no"
+          fi
+      fi
+      if [ "yes" = "$NEDDDH" ] ; then
+        openssl dhparam -out dh.pem 2048
+      fi
       zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+      rm -rf ./dh.pem
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
       if [ -e /var/www/html ] ; then
