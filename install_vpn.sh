@@ -294,71 +294,11 @@ InitPKI_buildCA() {
   fi
 }
 
-dualvpn_config() {
-   echo "you'll use ipsec pki"
-   if [ -e /etc/ipsec.d/cacerts/ca.crt ] ; then
-      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
-        echo "use current CA"
-        NEEDPKICA="no"
-      else
-        echo "Re-initial PKI and generat a new CA"
-      fi
-   fi
-   if [ "yes" = "$NEEDPKICA" ] ; then
-      InitPKI_buildCA
-      sleep 1
-   fi
-    echo "now we have known CA is there, start to generate server certs now!"
-    ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
-    echo "Server cert has been generated now"
-    echo "Now Create client cert,Please input username if you would like to generate specific cert"
-    CLIENT_USER=$(prompt "Please input the username of client:" "client")
-    ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=${CLIENT_USER}" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
-    echo "You've generated the client cert. Scripts will help you pack it"
-    WORK_DIR=$(pwd)
-    cd /etc/ipsec.d/private
-    mkdir -p /tmp/ipsec.d/private
-    ls|grep -v cakey.pem|grep -v serverkey.pem|xargs -i cp -rp {} /tmp/ipsec.d/private/
-    mkdir -p /tmp/ipsec.d/cacerts
-    mkdir -p /tmp/ipsec.d/certs
-    cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
-    cd /etc/ipsec.d/certs/
-    ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
-    echo "pack ipsec pki client certs"
-    cd /tmp
-    zip -r client-ipsec.zip ./ipsec.d/*
-    rm -rf /tmp/ipsec*
-    openssl dhparam -out dh.pem 2048
-    zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
-    cd $WORK_DIR
-    echo "now in  ${WORK_DIR}"
 
-}
-
-
-openvpn_config() {
-  echo "you'll use openvpn and easyRSA as PKI tool"
-  if [ "server" = "$VPN_MODE" ] ; then
-    echo "You'll configure opevpn server mode"
-    cd /etc/openvpn/easyrsa
-    echo "Now in /etc/openvpn/easyrsa"
-    if  [ -e /etc/openvpn/ca.crt ] ; then
-      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
-        echo "use current CA"
-        NEEDPKICA="no"
-      else
-        echo "Re-initial PKI and generat a new CA"
-      fi
-    fi
-    if [ "yes" = "$NEEDPKICA" ] ; then
-      InitPKI_buildCA
-      sleep 1
-      echo "copy ca.crt to config folder"
-      cp  ./pki/ca.crt /etc/openvpn/
-    fi
-    echo "now we have known CA is there, start to generate server certs now!"
+generate_certs() {
+  echo "now we have CA in place, start to generate certs now!" 
+  if [ "openvpn" = "$VPN_TYPE" ] ; then
+#use easyrsa to generate certs
     ./easyrsa gen-req server nopass
     sleep 1
     ./easyrsa sign server server
@@ -395,10 +335,111 @@ openvpn_config() {
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
-    echo "start to configure stunnel4 and openvpn server mode"
-    echo "copy server key and cert for stunnel4"
-    cp /etc/openvpn/server.crt /etc/stunnel/
-    cp /etc/openvpn/server.key /etc/stunnel/
+
+
+  else
+#use ipsec to generte certs
+    ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+    echo "Server cert has been generated now"
+    echo "Now Create client cert,Please input username if you would like to generate specific cert"
+    CLIENT_USER=$(prompt "Please input the username of client:" "client")
+    ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
+      WORK_DIR=$(pwd)
+      cd /etc/ipsec.d/private
+      mkdir -p /tmp/ipsec.d/private
+      ls|grep -v cakey.pem|grep -v serverkey.pem|xargs -i cp -rp {} /tmp/ipsec.d/private/
+      mkdir -p /tmp/ipsec.d/cacerts
+      mkdir -p /tmp/ipsec.d/certs
+      cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
+      cd /etc/ipsec.d/certs/
+      ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
+      echo "pack ipsec pki client certs"
+      cd /tmp
+      zip -r client-ipsec.zip ./ipsec.d/*
+      rm -rf /tmp/ipsec*
+      openssl dhparam -out dh.pem 2048
+      zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+      cd $WORK_DIR
+      echo "now in  ${WORK_DIR}"
+      if [ -e /var/www/html ] ; then
+        echo "put in webfs for downloads"
+        cp /tmp/clientcerts.zip /var/www/html/
+        cp /tmp/client-ipsec.zip /var/www/html/
+        echo "Please download from http://your-server-ip:8000/"
+        rm -rf  /tmp/ca.crt /tmp/client*
+      else
+       echo "you need to download your client certs (/tmp/clientcerts.zip and client-ipsec.zip) for the use in client PC"
+      fi
+    else
+       echo "Please manually put client ca,key,cert in client PC pki"
+    fi
+
+  fi
+  echo "start to configure stunnel4 and openvpn server mode"
+  echo "copy server key and cert for stunnel4"
+  cp /etc/openvpn/server.crt /etc/stunnel/
+  cp /etc/openvpn/server.key /etc/stunnel/
+
+
+
+}
+
+
+dualvpn_config() {
+   echo "you'll use ipsec pki"
+   if [ -e /etc/ipsec.d/cacerts/ca.crt ] ; then
+      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+        echo "use current CA"
+        NEEDPKICA="no"
+      else
+        echo "Re-initial PKI and generat a new CA"
+      fi
+   fi
+   if [ "yes" = "$NEEDPKICA" ] ; then
+      InitPKI_buildCA
+      sleep 1
+   fi
+    echo "now we have known CA is there, start to generate server certs now!"
+    generate_certs
+    ovpn_config_file
+    strongswan_config_file
+#config file generation
+
+}
+
+
+openvpn_config() {
+  echo "you'll use openvpn and easyRSA as PKI tool"
+  if [ "server" = "$VPN_MODE" ] ; then
+    echo "You'll configure opevpn server mode"
+    cd /etc/openvpn/easyrsa
+    echo "Now in /etc/openvpn/easyrsa"
+    if  [ -e /etc/openvpn/ca.crt ] ; then
+      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+        echo "use current CA"
+        NEEDPKICA="no"
+      else
+        echo "Re-initial PKI and generat a new CA"
+      fi
+    fi
+    if [ "yes" = "$NEEDPKICA" ] ; then
+      InitPKI_buildCA
+      sleep 1
+      echo "copy ca.crt to config folder"
+      cp  ./pki/ca.crt /etc/openvpn/
+    fi
+    echo "now we have known CA is there, start to generate server certs now!"
+    generate_certs
+    ovpn_config_file
+  fi
+}
+
+
+ovpn_config_file() {
+  if [ "server" = "$VPN_MODE" ] ; then
 
     if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/server"
@@ -535,6 +576,55 @@ openvpn_config() {
     echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
     echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
+}
+
+ipsec_config_file() {
+#configure ipsec herek
+if [ "server" = "$VPN_MODE" ] ; then
+
+    echo -n "" > /etc/ipsec.conf
+    echo "config setup" >> /etc/ipsec.conf
+    echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
+    echo "  \# uniquyeids=no" >> /etc/ipsec.conf
+    echo "conn %default" >> /etc/ipsec.conf
+    echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+    echo "conn nat-t" >> /etc/ipsec.conf
+    echo "  left=%any" >> /etc/ipsec.conf
+    echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
+    echo "  leftid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
+    echo "  \# leftfirewall=yes" >> /etc/ipsec.conf
+    echo "  right=%any" >> /etc/ipsec.conf
+    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    echo "  auto=add" >> /etc/ipsec.conf
+
+    echo -n "" > /etc/ipsec.secrets
+    echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
+
+else
+
+    echo -n "" > /etc/ipsec.conf
+    echo "config setup" >> /etc/ipsec.conf
+    echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
+    echo "  \# uniquyeids=no" >> /etc/ipsec.conf
+    echo "conn %default" >> /etc/ipsec.conf
+    echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+    echo "conn nat-t" >> /etc/ipsec.conf
+    echo "  left=%defaultroute" >> /etc/ipsec.conf
+    echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
+    echo "  leftcert=client.pem" >> /etc/ipsec.conf
+    echo "  leftfirewall=yes" >> /etc/ipsec.conf
+    SERVER_URL=$(prompt "Please input the server IP:" "")
+    echo "  right=${SERVER_URL}"
+    echo "  rightid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
+    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    echo "  auto=add" >> /etc/ipsec.conf
+
+    echo -n "" > /etc/ipsec.secrets
+    echo ": RSA clientkey.pem" >> /etc/ipsec.secrets
+fi
+
 }
 
 
