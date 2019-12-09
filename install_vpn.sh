@@ -405,7 +405,7 @@ dualvpn_config() {
     echo "now we have known CA is there, start to generate server certs now!"
     generate_certs
     ovpn_config_file
-    strongswan_config_file
+    ipsec_config_file
 #config file generation
 
 }
@@ -581,7 +581,7 @@ ovpn_config_file() {
 ipsec_config_file() {
 #configure ipsec herek
 if [ "server" = "$VPN_MODE" ] ; then
-
+    echo "start to configure ipsec server side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
     echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
@@ -598,11 +598,12 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
+    echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
 
 else
-
+    echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
     echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
@@ -621,8 +622,12 @@ else
     echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
+    echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA clientkey.pem" >> /etc/ipsec.secrets
+
+    echo "strongswan configuration finished, you can start ipsec vpn at client side"
+    echo "Please download http://$SERVER_URL:8000/clients-ipsec.zip and put it in the right place of your client"
 fi
 
 }
