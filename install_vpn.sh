@@ -288,7 +288,7 @@ InitPKI_buildCA() {
   else
     echo "Initial ipsec pki and build CA now"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/ca.crt
+    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
     echo "CA key and CA cert generated"
 
   fi
@@ -342,6 +342,10 @@ generate_certs() {
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
     ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/ca.crt --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
     echo "Server cert has been generated now"
+    echo "Copy to openvpn config file"
+    cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
+    cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
+
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
@@ -356,10 +360,13 @@ generate_certs() {
       cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
       cd /etc/ipsec.d/certs/
       ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
+
       echo "pack ipsec pki client certs"
       cd /tmp
       zip -r client-ipsec.zip ./ipsec.d/*
-      rm -rf /tmp/ipsec*
+      mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
+      mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
+      mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
 
       if [ -e /etc/openvpn/dh.pem ] ; then
           if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
@@ -372,6 +379,7 @@ generate_certs() {
       fi
       zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
       rm -rf ./dh.pem
+      rm -rf /tmp/ipsec.d
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
       if [ -e /var/www/html ] ; then
@@ -399,6 +407,8 @@ generate_certs() {
 
 
 dualvpn_config() {
+ if [ "server" ="$VPN_MODE" ] ; then
+
    echo "you'll use ipsec pki"
    if [ -e /etc/ipsec.d/cacerts/ca.crt ] ; then
       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
@@ -414,10 +424,9 @@ dualvpn_config() {
    fi
     echo "now we have known CA is there, start to generate server certs now!"
     generate_certs
+ fi
     ovpn_config_file
     ipsec_config_file
-#config file generation
-
 }
 
 
@@ -443,8 +452,8 @@ openvpn_config() {
     fi
     echo "now we have known CA is there, start to generate server certs now!"
     generate_certs
-    ovpn_config_file
   fi
+    ovpn_config_file
 }
 
 
