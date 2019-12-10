@@ -156,7 +156,27 @@ check_root() {
 
 prepare_installation_paras() {
 #check out ubuntu version
-UBUNTU_VERSION='lsb_release --release | cut -f2'
+UBUNTU_VERSION="$(lsb_release --release | cut -f2)"
+if [ "18.04" = "${UBUNTU_VERSION}" ]; then
+      OVPN_CONFIG_DIR="/etc/openvpn/server"
+      OVPN_SERVICE="openvpn-server@server"
+      OVPN_COMPRESS="compress lz4-v2"
+      OVPN_LOG_DIR="/var/log/openvpn"
+else 
+      OVPN_CONFIG_DIR="/etc/openvpn"
+      OVPN_SERVICE="openvpn@server"
+      OVPN_COMPRESS="comp-lzo"
+      OVPN_LOG_DIR="/var/log"
+      if [ "16.04" != "${UBUNTU_VERSION}" ]; then
+         if prompt-yesno "This script only verified in ubuntu. Please do not try it in non-debian distribution!Contine?" no; then 
+             echo "only ubuntu 16.04 and 14.04 are verified. Take your own risk to try it in other version"
+         else
+             echo "pvpn installation aborted"
+             exit 1
+         fi
+      fi 
+fi
+echo "Your ubuntu version is: ${UBUNTU_VERSION}"
 #set necessary variables
 NEEDPKICA="yes"
 NEEDDH="yes"
@@ -484,18 +504,6 @@ openvpn_config() {
 
 
 ovpn_config_file() {
-  if [ "18.04" = "$UBUNTU_VERSION" ]; then
-      OVPN_CONFIG_DIR="/etc/openvpn/server"
-      OVPN_SERVICE="openvpn-server@server"
-      OVPN_COMPRESS="compress lz4-v2"
-      OVPN_LOG_DIR="/var/log/openvpn"
-  else 
-      OVPN_CONFIG_DIR="/etc/openvpn"
-      OVPN_SERVICE="openvpn@server"
-      OVPN_COMPRESS="comp-lzo"
-      OVPN_LOG_DIR="/var/log"
-  fi
-
 
   if [ "server" = "$VPN_MODE" ] ; then
 #configure stunnel server here
