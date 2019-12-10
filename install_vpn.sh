@@ -400,8 +400,34 @@ generate_certs() {
   echo "copy server key and cert for stunnel4"
   cp /etc/openvpn/server.crt /etc/stunnel/
   cp /etc/openvpn/server.key /etc/stunnel/
+  ovpnclient_for_win
+}
 
-
+ovpnclient_for_win() {
+    echo "now generate windows client config"
+    echo -n "" > /tmp/stunnel.conf
+    echo "[openvpn-localhost]" >> /tmp/stunnel.conf
+    echo "client=yes" >> /tmp/stunnel.conf
+    echo "accept = 127.0.0.1:11000" >> /tmp/stunnel.conf
+    echo "connect = ${SERVERIP}:8443" >> /tmp/stunnel.conf
+#configure openvpn client for windows
+    echo -n "" > tmp/client.ovpn
+    echo "client" >> /tmp/client.ovpn
+    echo "proto tcp" >> /tmp/client.ovpn
+    echo "dev tap" >> /tmp/client.ovpn
+    echo "ca ca.crt" >> /tmp/client.ovpn
+    echo "cert client.crt" >> /tmp/client.ovpn
+    echo "key client.key" >> /tmp/client.ovpn
+    echo "remote 127.0.0.1 11000" >> /tmp/client.ovpn
+    echo "resolv-retry infinite" >> /tmp/client.ovpn
+    echo "dhcp-option DNS 8.8.8.8" >> /tmp/client.ovpn
+    echo "nobind" >> /tmp/client.ovpn
+    echo "$OVPN_COMPRESS" >> /tmp/client.ovpn
+    if [ -e /var/www/html ] ; then
+      zip /var/www/html/windows-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
+      sleep 1
+      rm -rf /tmp/client.ovpn /tmp/stunnel.conf
+    fi
 
 }
 
@@ -458,21 +484,20 @@ openvpn_config() {
 
 
 ovpn_config_file() {
-  if [ "server" = "$VPN_MODE" ] ; then
-
-    if [ "18.04" = "$UBUNTU_VERSION" ]; then
+  if [ "18.04" = "$UBUNTU_VERSION" ]; then
       OVPN_CONFIG_DIR="/etc/openvpn/server"
       OVPN_SERVICE="openvpn-server@server"
       OVPN_COMPRESS="compress lz4-v2"
       OVPN_LOG_DIR="/var/log/openvpn"
-    else 
+  else 
       OVPN_CONFIG_DIR="/etc/openvpn"
       OVPN_SERVICE="openvpn@server"
       OVPN_COMPRESS="comp-lzo"
       OVPN_LOG_DIR="/var/log"
-    fi
+  fi
 
 
+  if [ "server" = "$VPN_MODE" ] ; then
 #configure stunnel server here
     echo "Scripts will remove stunnel and openvpn config file first. " 
     rm -rf /etc/stunnel/stunnel.conf
@@ -518,18 +543,10 @@ ovpn_config_file() {
     else
       echo "You need to manually start your openvpn server by typing systemctl start openvpn-server@server"
     fi
+
   else
     echo "you'll configure stunnel4 and openvpn client mode now"
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
-    if [ "18.04" = "$UBUNTU_VERSION" ]; then
-      OVPN_CONFIG_DIR="/etc/openvpn/client"
-      OVPN_SERVICE="openvpn-client@client"
-      OVPN_COMPRESS="compress lz4-v2"
-    else
-      OVPN_CONFIG_DIR="/etc/openvpn"
-      OVPN_SERVICE="openvpn@client"
-      OVPN_COMPRESS="comp-lzo"
-    fi
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf $OVPN_CONFIG_DIR/server.conf
     echo "configuring stunnel.conf"
