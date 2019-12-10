@@ -444,7 +444,7 @@ ovpnclient_for_win() {
     echo "nobind" >> /tmp/client.ovpn
     echo "$OVPN_COMPRESS" >> /tmp/client.ovpn
     if [ -e /var/www/html ] ; then
-      zip /var/www/html/windows-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
+      zip -j /var/www/html/windows-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
       sleep 1
       rm -rf /tmp/client.ovpn /tmp/stunnel.conf
     fi
