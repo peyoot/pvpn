@@ -310,7 +310,7 @@ generate_certs() {
            NEEDDH="no"
         fi
     fi
-    if [ "yes" = "$NEDDDH" ] ; then
+    if [ "yes" = "$NEEDDH" ] ; then
       ./easyrsa gen-dh
       echo "copy dh to config folder"
       cp ./pki/dh.pem /etc/openvpn/
