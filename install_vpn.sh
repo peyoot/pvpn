@@ -467,26 +467,28 @@ ovpnclient_for_win() {
 
 
 ipsec_dualvpn_config() {
- if [ "server" ="$VPN_MODE" ] ; then
+  if [ "server" ="$VPN_MODE" ]; then
 
-   echo "you'll use ipsec pki"
-   if [ -e /etc/ipsec.d/cacerts/ca.crt ] ; then
-      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
-        echo "use current CA"
-        NEEDPKICA="no"
-      else
-        echo "Re-initial PKI and generat a new CA"
-      fi
-   fi
-   if [ "yes" = "$NEEDPKICA" ] ; then
+    echo "you'll use ipsec pki"
+    if [ -e /etc/ipsec.d/cacerts/ca.crt ]; then
+       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+         echo "use current CA"
+         NEEDPKICA="no"
+       else
+         echo "Re-initial PKI and generat a new CA"
+       fi
+    fi
+    if [ "yes" = "$NEEDPKICA" ]; then
       InitPKI_buildCA
       sleep 1
-   fi
+    fi
     echo "now we have known CA is there, start to generate server certs now!"
     generate_certs
  fi
+ ipsec_config_file
+ if [ "dualvpn" = "$VPN_TYPE" ]; then
     ovpn_config_file
-    ipsec_config_file
+ fi
 }
 
 
@@ -695,10 +697,12 @@ ipsec_dualvpn_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan 
-  openvpn_install
-  echo "apt install -y strongswan-pki" | tee -a /var/log/pvpn_install.log
-  apt install -y strongswan-pki
-
+  if [ "dualvpn" = "$VPN_TYPE" ]; then
+    openvpn_install
+  else
+    echo "apt install -y strongswan-pki" | tee -a /var/log/pvpn_install.log
+    apt install -y strongswan-pki
+  fi
 }
 
 openvpn_install()  {
