@@ -210,13 +210,17 @@ else
     echo "You can:"
     echo ""
     echo "1. Install openvpn+stunnel only and use easyrsa3 as PKI( enter to accept this default)"
-    echo "2. Install both strongswan and openvpn, use strongswan PKI tool "
+    echo "2. Install Strongswan only and use ipsec PKI tool"
+    echo "3. Install both strongswan and openvpn, use ipsec PKI tool "
     echo ""
     CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "1")
   fi
-  if [ "1" = "$CHOSEN_VPN_TYPE" ] ; then
+  if [ "1" = "$CHOSEN_VPN_TYPE" ]; then
     echo "Select openvpn over stunnel" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="openvpn"
+  elif [ "2" = "$CHOSEN_VPN_TYPE" ]; then
+    echo "Select strongswan sole" | tee -a /var/log/pvpn_install.log
+    VPN_TYPE="strongswan"
   else
     echo "Select both openvpn/stunnel and strongswan VPN" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="dualvpn"
@@ -230,12 +234,12 @@ confirm_install() {
   echo "prepare some software packages for scripts to use"
   echo "apt update" | tee -a /var/log/pvpn_install.log 
   apt update
-  if [ ! -e /usr/bin/zip ] ; then
+  if [ ! -e /usr/bin/zip ]; then
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
   fi
 #  apt install -y net-tools
-  if [ "server" = "$VPN_MODE" ] ; then
+  if [ "server" = "$VPN_MODE" ]; then
     if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
         echo "webfs will be installed.please wait...."
         echo "apt install -y webfs"
@@ -250,10 +254,12 @@ confirm_install() {
     fi
   fi
   
-  if [ "openvpn" = "$VPN_TYPE" ] ; then
+  if [ "openvpn" = "$VPN_TYPE" ]; then
     openvpn_install
+#  elif [ "strongswan" =  "$VPN_TYPE" ]; then
+#    strongswan_install
   else
-    dualvpn_install
+    ipsec_dualvpn_install
   fi
 }
 
@@ -261,10 +267,12 @@ confirm_install() {
 confirm_setting() {
   echo "sctips are about to setup software based on your choise"
   echo "you've chosen $VPN_TYPE"
-  if [ "openvpn" = "$VPN_TYPE" ] ; then
+  if [ "openvpn" = "$VPN_TYPE" ]; then
     openvpn_config
+#  elif [ "strongswan" = "$VPN_TYPE" ]; then
+#    strongswan_config
   else
-    dualvpn_config
+    ipsec_dualvpn_config
   fi
 }
 
@@ -383,31 +391,42 @@ generate_certs() {
 
       echo "pack ipsec pki client certs"
       cd /tmp
-      zip -r client-ipsec.zip ./ipsec.d/*
-      mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
-      mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
-      mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
+      zip -r pvpn-client-ipsec.zip ./ipsec.d/*
+#if it's dualvpn
+      if [ "dualvpn" = "$VPN_TYPE" ]; then
 
-      if [ -e /etc/openvpn/dh.pem ] ; then
-          if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
-             echo "use current dh.pem"
-             NEEDDH="no"
-          fi
+        mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
+        mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
+        mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
+
+        if [ -e /etc/openvpn/dh.pem ] ; then
+            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+               echo "use current dh.pem"
+               NEEDDH="no"
+            fi
+        fi
+        if [ "yes" = "$NEDDDH" ] ; then
+          openssl dhparam -out dh.pem 2048
+        fi
+        zip -j pvpn-client-ovpn.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+        rm -rf ./dh.pem
+        rm -rf /tmp/ipsec.d
+ 
+        echo "start to configure stunnel4 and openvpn server mode"
+        echo "copy server key and cert for stunnel4"
+        cp /etc/openvpn/server.crt /etc/stunnel/
+        cp /etc/openvpn/server.key /etc/stunnel/
+        ovpnclient_for_win
       fi
-      if [ "yes" = "$NEDDDH" ] ; then
-        openssl dhparam -out dh.pem 2048
-      fi
-      zip -j clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
-      rm -rf ./dh.pem
-      rm -rf /tmp/ipsec.d
+
+# end of if dualvpn
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
-        cp /tmp/clientcerts.zip /var/www/html/
-        cp /tmp/client-ipsec.zip /var/www/html/
+        cp /tmp/pvpn-client*.zip /var/www/html/
         echo "Please download from http://your-server-ip:8000/"
-        rm -rf  /tmp/ca.crt /tmp/client*
+        rm -rf  /tmp/ca.crt /tmp/pvpn-client*.zip
       else
        echo "you need to download your client certs (/tmp/clientcerts.zip and client-ipsec.zip) for the use in client PC"
       fi
@@ -416,11 +435,6 @@ generate_certs() {
     fi
 
   fi
-  echo "start to configure stunnel4 and openvpn server mode"
-  echo "copy server key and cert for stunnel4"
-  cp /etc/openvpn/server.crt /etc/stunnel/
-  cp /etc/openvpn/server.key /etc/stunnel/
-  ovpnclient_for_win
 }
 
 ovpnclient_for_win() {
@@ -452,7 +466,7 @@ ovpnclient_for_win() {
 }
 
 
-dualvpn_config() {
+ipsec_dualvpn_config() {
  if [ "server" ="$VPN_MODE" ] ; then
 
    echo "you'll use ipsec pki"
@@ -677,7 +691,7 @@ fi
 }
 
 
-dualvpn_install() {
+ipsec_dualvpn_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan 
