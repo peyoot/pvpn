@@ -368,16 +368,13 @@ generate_certs() {
   else
 #use ipsec to generte certs
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/ca.crt --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
     echo "Server cert has been generated now"
-    echo "Copy to openvpn config file"
-    cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
-    cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
 
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/ca.crt --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       WORK_DIR=$(pwd)
       cd /etc/ipsec.d/private
@@ -394,6 +391,9 @@ generate_certs() {
       zip -r pvpn-client-ipsec.zip ./ipsec.d/*
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
+        echo "Copy to openvpn config file"
+        cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
+        cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
 
         mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
