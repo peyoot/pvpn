@@ -259,7 +259,7 @@ confirm_install() {
 #  elif [ "strongswan" =  "$VPN_TYPE" ]; then
 #    strongswan_install
   else
-    ipsec_dualvpn_install
+    ipsec_install
   fi
 }
 
@@ -272,7 +272,7 @@ confirm_setting() {
 #  elif [ "strongswan" = "$VPN_TYPE" ]; then
 #    strongswan_config
   else
-    ipsec_dualvpn_config
+    ipsec_config
   fi
 }
 
@@ -466,8 +466,8 @@ ovpnclient_for_win() {
 }
 
 
-ipsec_dualvpn_config() {
-  if [ "server" ="$VPN_MODE" ]; then
+ipsec_config() {
+  if [ "server" = "$VPN_MODE" ]; then
 
     echo "you'll use ipsec pki"
     if [ -e /etc/ipsec.d/cacerts/ca.crt ]; then
@@ -693,7 +693,7 @@ fi
 }
 
 
-ipsec_dualvpn_install() {
+ipsec_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan 
