@@ -280,7 +280,7 @@ use_existingCA() {
   if [ "openvpn" = "$VPN_TYPE" ] ; then
     CA_FILE="/etc/openvpn/ca.crt"
   else 
-    CA_FILE="/etc/ipsec.d/cacerts/ca.crt"
+    CA_FILE="/etc/ipsec.d/cacerts/cacert.pem"
   fi
   if [ -e $CA_FILE ]; then
     echo "Scripts will use CA file $CA_FILE"
@@ -410,7 +410,6 @@ generate_certs() {
         fi
         zip -j pvpn-client-ovpn.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
         rm -rf ./dh.pem
-        rm -rf /tmp/ipsec.d
  
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
@@ -420,6 +419,7 @@ generate_certs() {
       fi
 
 # end of if dualvpn
+      rm -rf /tmp/ipsec.d
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
       if [ -e /var/www/html ] ; then
