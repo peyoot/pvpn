@@ -647,15 +647,15 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "start to configure ipsec server side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
-    echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
-    echo "  \# uniquyeids=no" >> /etc/ipsec.conf
+    echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
+    echo "  # uniquyeids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%any" >> /etc/ipsec.conf
     echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
     echo "  leftid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
-    echo "  \# leftfirewall=yes" >> /etc/ipsec.conf
+    echo "  # leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=%any" >> /etc/ipsec.conf
     RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
     echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
