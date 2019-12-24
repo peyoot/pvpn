@@ -669,8 +669,8 @@ else
     echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
-    echo "  \# strictcrlpolicy=yes" >> /etc/ipsec.conf
-    echo "  \# uniquyeids=no" >> /etc/ipsec.conf
+    echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
+    echo "  # uniquyeids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
@@ -680,17 +680,18 @@ else
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "  right=${SERVER_URL}"
-    echo "  rightid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
-    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    echo "  rightid=\"C=CN,O=Palfort,CN=server"" >> /etc/ipsec.conf
+#    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+#    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
     echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA clientkey.pem" >> /etc/ipsec.secrets
 
-    echo "strongswan configuration finished, you can start ipsec vpn at client side"
+    echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up nat-t"
     echo "Please download http://$SERVER_URL:8000/clients-ipsec.zip and put it in the right place of your client"
+    echo "To extract to the right place: sudo unzip clients-ipsec.zip -d /etc/"
 fi
 
 }
