@@ -377,7 +377,7 @@ generate_certs() {
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       WORK_DIR=$(pwd)
       cd /etc/ipsec.d/private
