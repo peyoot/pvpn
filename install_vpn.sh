@@ -665,7 +665,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
-
+    echo "ipsec configuration is ready to work now,please remember to open server's 500,4500 port and run ipsec restart before you can set up ipsec tunnel"
 else
     echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
