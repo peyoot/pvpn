@@ -678,7 +678,7 @@ else
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
     echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
-    echo "  leftcert=client.pem" >> /etc/ipsec.conf
+    echo "  leftcert=clientcert.pem" >> /etc/ipsec.conf
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
