@@ -681,8 +681,8 @@ else
     SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "  right=${SERVER_URL}"
     echo "  rightid=\"C=CN,O=Palfort,CN=server"" >> /etc/ipsec.conf
-#    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-#    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "10.0.0.0/24")
+    echo "  #  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
     echo "now configuring VPN authenticaion method"
