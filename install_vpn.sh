@@ -651,6 +651,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "  # uniquyeids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+    echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%any" >> /etc/ipsec.conf
     echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
@@ -673,6 +674,7 @@ else
     echo "  # uniquyeids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+    echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.con
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
     echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
