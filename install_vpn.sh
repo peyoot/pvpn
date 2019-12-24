@@ -240,17 +240,20 @@ confirm_install() {
   fi
 #  apt install -y net-tools
   if [ "server" = "$VPN_MODE" ]; then
-    if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
-        echo "webfs will be installed.please wait...."
-        echo "apt install -y webfs"
-        apt install -y webfs
-        echo "sleep 1"
-        sleep 1
-        echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
-        mkdir -p /var/www/html
-        echo "create /var/www/html for webfs"
-    else
-        echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
+#check webf availability
+    if [ ! -e /etc/webfsd.conf ]; then
+      if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
+          echo "webfs will be installed.please wait...."
+          echo "apt install -y webfs"
+          apt install -y webfs
+          echo "sleep 1"
+          sleep 1
+          echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
+          mkdir -p /var/www/html
+          echo "create /var/www/html for webfs"
+      else
+          echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
+      fi
     fi
   fi
   
