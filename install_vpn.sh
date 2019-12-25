@@ -604,8 +604,8 @@ ovpn_config_file() {
     rm -rf $OVPN_CONFIG_DIR/nonvpn-routes.up
     rm -rf $OVPN_CONFIG_DIR/nonvpn-routes.down
     echo "script-security 2" >> $OVPN_CONFIG_DIR/client.conf
-    echo "up $OVPN_CONFIG_DIR/nonvpn-routes.up" >> $OVPN_CONFIG_DIR/client.conf
-    echo "down $OVPN_CONFIG_DIR/nonvpn-routes.down" >> $OVPN_CONFIG_DIR/client.conf
+    echo "up ${OVPN_CONFIG_DIR}/nonvpn-routes.up" >> $OVPN_CONFIG_DIR/client.conf
+    echo "down ${OVPN_CONFIG_DIR}/nonvpn-routes.down" >> $OVPN_CONFIG_DIR/client.conf
     echo -n "" > $OVPN_CONFIG_DIR/nonvpn-routes.up
     echo "#!/bin/bash" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
     echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_DIR/nonvpn-routes.up
