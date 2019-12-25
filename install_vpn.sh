@@ -653,7 +653,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
     echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
-    echo "  left=%any" >> /etc/ipsec.conf
+    echo "  left=%defaultroute" >> /etc/ipsec.conf
     echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
     echo "  leftid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
     echo "  # leftfirewall=yes" >> /etc/ipsec.conf
@@ -683,7 +683,8 @@ else
     SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
-#    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "10.0.1.0/24")
+    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
     echo "now configuring VPN authenticaion method"
