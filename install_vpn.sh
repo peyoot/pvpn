@@ -565,6 +565,7 @@ ovpn_config_file() {
     echo "mute 20" >> $OVPN_CONFIG_DIR/server.conf
     echo "# explicit-exit-notify 1" >> $OVPN_CONFIG_DIR/server.conf
     echo "openVPN server configuration finished"
+    systemctl start $OVPN_SERVICE
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable $OVPN_SERVICE
     else
