@@ -575,10 +575,10 @@ ovpn_config_file() {
     echo "keepalive 10 120" >> $OVPN_CONFIG_SDIR/server.conf
     echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_SDIR/server.conf
     echo "max-clients 10" >>$OVPN_CONFIG_SDIR/server.conf
-    echo "# user nobody" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "# group nobody" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "persist-key" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "persist-tun" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "user nobody" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "group nogroup" >> $OVPN_CONFIG_SDIR/server.conf
+    echo ";persist-key" >> $OVPN_CONFIG_SDIR/server.conf
+    echo ";persist-tun" >> $OVPN_CONFIG_SDIR/server.conf
     echo "status $OVPN_LOG_DIR/openvpn-status.log" >> $OVPN_CONFIG_SDIR/server.conf
     echo "verb 3" >> $OVPN_CONFIG_SDIR/server.conf
     echo "mute 20" >> $OVPN_CONFIG_SDIR/server.conf
