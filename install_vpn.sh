@@ -283,6 +283,13 @@ confirm_setting() {
   fi
 }
 
+finish_pvpn() {
+  echo "webfs servcie will be stop after 24 hours. You won't be able to download related client certs at that time"
+  systemctl stop webfs |at now + 24 hours
+  echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+
+}
+
 use_existingCA() {
   if [ "openvpn" = "$VPN_TYPE" ] ; then
     CA_FILE="/etc/openvpn/ca.crt"
@@ -798,6 +805,7 @@ assert_on_terminal
 prepare_installation_paras
 confirm_install
 confirm_setting
+finish_pvpn
 }
 
 # Now that we know the whole script has downloaded, run it.
