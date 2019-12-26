@@ -284,14 +284,17 @@ confirm_setting() {
 }
 
 finish_pvpn() {
-  echo "webfs servcie will be stop after 24 hours. You won't be able to download related client certs at that time"
-  systemctl stop webfs |at now + 24 hours
-  echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
-
+  if [ "server" = "$VPN_MODE" ]; then 
+    echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
+    systemctl stop webfs |at now + 24 hours
+    echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+  else
+    echo "You have set up your vpn client mode with pvpn tools. "
+  fi
 }
 
 use_existingCA() {
-  if [ "openvpn" = "$VPN_TYPE" ] ; then
+  if [ "openvpn" = "$VPN_TYPE" ]; then
     CA_FILE="/etc/openvpn/ca.crt"
   else 
     CA_FILE="/etc/ipsec.d/cacerts/cacert.pem"
