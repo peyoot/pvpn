@@ -575,8 +575,8 @@ ovpn_config_file() {
     echo "keepalive 10 120" >> $OVPN_CONFIG_SDIR/server.conf
     echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_SDIR/server.conf
     echo "max-clients 10" >>$OVPN_CONFIG_SDIR/server.conf
-    echo "user nobody" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "group nogroup" >> $OVPN_CONFIG_SDIR/server.conf
+    echo ";user nobody" >> $OVPN_CONFIG_SDIR/server.conf
+    echo ";group nogroup" >> $OVPN_CONFIG_SDIR/server.conf
     echo ";persist-key" >> $OVPN_CONFIG_SDIR/server.conf
     echo ";persist-tun" >> $OVPN_CONFIG_SDIR/server.conf
     echo "status $OVPN_LOG_DIR/openvpn-status.log" >> $OVPN_CONFIG_SDIR/server.conf
@@ -615,8 +615,8 @@ ovpn_config_file() {
     echo "resolv-retry infinite" >> $OVPN_CONFIG_CDIR/client.conf
     echo "nobind" >> $OVPN_CONFIG_CDIR/client.conf
     echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "# user nobody" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "# group nobody" >> $OVPN_CONFIG_CDIR/client.conf
+    echo ";user nobody" >> $OVPN_CONFIG_CDIR/client.conf
+    echo ";group nobody" >> $OVPN_CONFIG_CDIR/client.conf
     echo "persist-key" >> $OVPN_CONFIG_CDIR/client.conf
     echo "persist-tun" >> $OVPN_CONFIG_CDIR/client.conf
     echo "mute 20" >> $OVPN_CONFIG_CDIR/client.conf
