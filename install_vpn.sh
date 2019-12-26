@@ -291,6 +291,7 @@ finish_pvpn() {
   else
     echo "You have set up your vpn client mode with pvpn tools. "
   fi
+
 }
 
 use_existingCA() {
@@ -583,9 +584,10 @@ ovpn_config_file() {
     echo "mute 20" >> $OVPN_CONFIG_SDIR/server.conf
     echo "# explicit-exit-notify 1" >> $OVPN_CONFIG_SDIR/server.conf
     echo "openVPN server configuration finished"
-    systemctl start $OVPN_SSERVICE
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable $OVPN_SSERVICE
+      systemctl start $OVPN_SSERVICE
+      systemctl start stunnel4
     else
       echo "You need to manually start your openvpn server by typing systemctl start openvpn-server@server"
     fi
@@ -653,6 +655,7 @@ ovpn_config_file() {
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi 
+    systemctl start stunnel4
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
     echo "If you download clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j clientcerts.zip -d /etc/openvpn/"
     echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
