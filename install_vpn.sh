@@ -338,7 +338,8 @@ generate_certs() {
     sleep 1
     ./easyrsa sign server server
     echo "copy server key and cert to config folder"
-    cp  ./pki/private/server.key ./pki/issued/server.crt  /etc/openvpn/
+    cp  ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
+    cp  ./pki/private/server.key ./pki/issued/server.crt /etc/stunnel/
     if [ -e /etc/openvpn/dh.pem ] ; then
         if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
            echo "use current dh.pem"
