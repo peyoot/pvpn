@@ -288,6 +288,21 @@ finish_pvpn() {
     echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
     systemctl stop webfs |at now + 24 hours
     echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+    echo "Now set iptables to finish the pvpn install"
+    NETINTERFACE=$(ip route | grep default | awk '{print $5}')
+    iptables -I FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+    iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    iptables -t nat -I POSTROUTING -O ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
+    iptables-save > /etc/iptables.rules
+#    echo 1 > /proc/sys/net/ipv4/ip_forward
+#    sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+    ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+    echo "[Install]" >> /etc/systemd/system/rc-local.service
+    echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
+    echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
+    touch  /etc/rc.local
+    echo "#!/bin/bash" >> /etc/rc.local
+    echo "iptables-restore < /etc/iptables.rules" 
   else
     echo "You have set up your vpn client mode with pvpn tools. "
   fi
