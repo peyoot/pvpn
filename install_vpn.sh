@@ -293,9 +293,9 @@ finish_pvpn() {
       echo "your strongswan installation and configuration have been done"
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
-      iptables -I FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
-      iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-      iptables -t nat -I POSTROUTING -O ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
+      iptables -A FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+      iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
       iptables-save > /etc/iptables.rules
 #     echo 1 > /proc/sys/net/ipv4/ip_forward
 #     sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
