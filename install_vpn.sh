@@ -289,22 +289,32 @@ finish_pvpn() {
     systemctl stop webfs |at now + 24 hours
     echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
     echo "Now set iptables to finish the pvpn install"
-    NETINTERFACE=$(ip route | grep default | awk '{print $5}')
-    iptables -I FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
-    iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-    iptables -t nat -I POSTROUTING -O ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
-    iptables-save > /etc/iptables.rules
-#    echo 1 > /proc/sys/net/ipv4/ip_forward
-#    sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-    ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-    echo "[Install]" >> /etc/systemd/system/rc-local.service
-    echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
-    echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
-    touch  /etc/rc.local
-    echo "#!/bin/bash" >> /etc/rc.local
-    echo "iptables-restore < /etc/iptables.rules" 
+    if [ "strongswan" = "$VPN_TYPE" ]; then
+      echo "your strongswan installation and configuration have been done"
+    else
+      NETINTERFACE=$(ip route | grep default | awk '{print $5}')
+      iptables -I FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+      iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      iptables -t nat -I POSTROUTING -O ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
+      iptables-save > /etc/iptables.rules
+#     echo 1 > /proc/sys/net/ipv4/ip_forward
+#     sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+      ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+      echo "[Install]" >> /etc/systemd/system/rc-local.service
+      echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
+      echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
+      touch  /etc/rc.local
+      echo "#!/bin/bash" >> /etc/rc.local
+      echo "iptables-restore < /etc/iptables.rules" 
+    fi
   else
     echo "You have set up your vpn client mode with pvpn tools. "
+    if [ "strongswan" = "$VPN_TYPE" ]; then
+      echo "You'll need to use ipsec certs to configure your client"
+    else
+      echo "Please download certs and put it in the right place. Download pvpn-win-configs.zip and unzip it. put the stunel.conf in stunnel config path and put client.conf in openvpn config path."
+    fi
+
   fi
 
 }
@@ -386,16 +396,17 @@ generate_certs() {
     ./easyrsa gen-req client nopass
     ./easyrsa sign client client
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
-      echo "zip ca.crt client.key,client.crt to clientcerts.zip"
+      echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
-      zip -j /tmp/clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
+      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
+      ovpnclient_for_win
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
-        cp /tmp/clientcerts.zip /var/www/html/
-        echo "Please download from http://your-server-ip:8000/clientcerts.zip"
-        rm -rf  /tmp/ca.crt /tmp/client*
+        cp /tmp/pvpn*.zip /var/www/html/
+        echo "Please download from http://your-server-ip:8000/pvpn-openvpn-clientcerts.zip"
+        rm -rf  /tmp/ca.crt /tmp/pvpn*.zip
       else
-       echo "you need to download your client certs (/tmp/clientcerts.zip) for the use in client PC"
+       echo "you need to download your client certs (/tmp/pvpn-openvpn-clientcerts.zip) for the use in client PC"
       fi
     else
        echo "Please manually put client ca,key,cert in client PC"
@@ -425,7 +436,7 @@ generate_certs() {
 
       echo "pack ipsec pki client certs"
       cd /tmp
-      zip -r pvpn-client-ipsec.zip ./ipsec.d/*
+      zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/*
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
         echo "Copy to openvpn config file"
@@ -445,7 +456,7 @@ generate_certs() {
         if [ "yes" = "$NEDDDH" ] ; then
           openssl dhparam -out dh.pem 2048
         fi
-        zip -j pvpn-client-ovpn.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
         rm -rf ./dh.pem
  
         echo "start to configure stunnel4 and openvpn server mode"
@@ -461,11 +472,11 @@ generate_certs() {
       echo "now in  ${WORK_DIR}"
       if [ -e /var/www/html ] ; then
         echo "put in webfs for downloads"
-        cp /tmp/pvpn-client*.zip /var/www/html/
+        cp /tmp/pvpn*.zip /var/www/html/
         echo "Please download from http://your-server-ip:8000/"
-        rm -rf  /tmp/ca.crt /tmp/pvpn-client*.zip
+        rm -rf  /tmp/ca.crt /tmp/pvpn*.zip
       else
-       echo "you need to download your client certs (/tmp/clientcerts.zip and client-ipsec.zip) for the use in client PC"
+       echo "you need to download your client certs (/tmp/pvpn-openvpn-clientcerts.zip and pvpn-ipsec-clientcerts.zip) for the use in client PC"
       fi
     else
        echo "Please manually put client ca,key,cert in client PC pki"
@@ -491,14 +502,10 @@ ovpnclient_for_win() {
     echo "key client.key" >> /tmp/client.ovpn
     echo "remote 127.0.0.1 11000" >> /tmp/client.ovpn
     echo "resolv-retry infinite" >> /tmp/client.ovpn
-    echo "dhcp-option DNS 8.8.8.8" >> /tmp/client.ovpn
+    echo "dhcp-option DNS 1.1.1.1" >> /tmp/client.ovpn
     echo "nobind" >> /tmp/client.ovpn
     echo "$OVPN_COMPRESS" >> /tmp/client.ovpn
-    if [ -e /var/www/html ] ; then
-      zip -j /var/www/html/windows-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
-      sleep 1
-      rm -rf /tmp/client.ovpn /tmp/stunnel.conf
-    fi
+    zip -j /tmp/pvpn-win-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
 
 }
 
@@ -672,7 +679,7 @@ ovpn_config_file() {
     fi 
     systemctl start stunnel4
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
-    echo "If you download clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j clientcerts.zip -d /etc/openvpn/"
+    echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
     echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
     echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
