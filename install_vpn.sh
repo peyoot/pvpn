@@ -305,7 +305,7 @@ finish_pvpn() {
       echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
       touch  /etc/rc.local
       echo "#!/bin/bash" >> /etc/rc.local
-      echo "iptables-restore < /etc/iptables.rules" 
+      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
     fi
   else
     echo "You have set up your vpn client mode with pvpn tools. "
