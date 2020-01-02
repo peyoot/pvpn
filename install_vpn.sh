@@ -491,7 +491,8 @@ ovpnclient_for_win() {
     echo "[openvpn-localhost]" >> /tmp/stunnel.conf
     echo "client=yes" >> /tmp/stunnel.conf
     echo "accept = 127.0.0.1:11000" >> /tmp/stunnel.conf
-    echo "connect = ${SERVERIP}:8443" >> /tmp/stunnel.conf
+    SERVER_URL=$(prompt "Please input the server IP:" "")
+    echo "connect = ${SERVER_URL}:8443" >> /tmp/stunnel.conf
 #configure openvpn client for windows
     echo -n "" > /tmp/client.ovpn
     echo "client" >> /tmp/client.ovpn
