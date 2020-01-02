@@ -398,16 +398,8 @@ generate_certs() {
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
-      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key
-      ovpnclient_for_win
-      if [ -e /var/www/html ] ; then
-        echo "put in webfs for downloads"
-        cp /tmp/pvpn*.zip /var/www/html/
-        echo "Please download from http://your-server-ip:8000/pvpn-openvpn-clientcerts.zip"
-        rm -rf  /tmp/ca.crt /tmp/pvpn*.zip
-      else
-       echo "you need to download your client certs (/tmp/pvpn-openvpn-clientcerts.zip) for the use in client PC"
-      fi
+      ovpnclient_for_win 
+      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.ovpn /tmp/stunnel.conf
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
@@ -470,19 +462,29 @@ generate_certs() {
       rm -rf /tmp/ipsec.d
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
-      if [ -e /var/www/html ] ; then
-        echo "put in webfs for downloads"
-        cp /tmp/pvpn*.zip /var/www/html/
-        echo "Please download from http://your-server-ip:8000/"
-        rm -rf  /tmp/ca.crt /tmp/pvpn*.zip
-      else
-       echo "you need to download your client certs (/tmp/pvpn-openvpn-clientcerts.zip and pvpn-ipsec-clientcerts.zip) for the use in client PC"
-      fi
     else
        echo "Please manually put client ca,key,cert in client PC pki"
     fi
 
   fi
+# put for downloads
+  if [ -e /etc/webfsd.conf ] ; then
+    echo "put in webfs for downloads"
+    cp /tmp/pvpn*.zip /var/www/html/
+    if [ strongswan = "$VPN_TYPE" ]; then
+      echo "Please download from http://your-server-ip:8000/pvpn-ipsec-clientcerts.zip and put it in client configuration path"
+      rm -rf /tmp/ca.crt /tmp/pvpn*.zip
+
+    else
+      cp /tmp/stunnel.conf /var/www/html/
+      echo "Please download from http://your-server-ip:8000 "
+      echo "if you use openvpn, remember put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
+      rm -rf /tmp/client.* /tmp/stunnel.conf /tmp/ca.crt
+    fi
+  else
+   echo "you need to download your client certs (in /tmp/) for the use in client PC"
+  fi
+
 }
 
 ovpnclient_for_win() {
@@ -506,7 +508,6 @@ ovpnclient_for_win() {
     echo "dhcp-option DNS 1.1.1.1" >> /tmp/client.ovpn
     echo "nobind" >> /tmp/client.ovpn
     echo "$OVPN_COMPRESS" >> /tmp/client.ovpn
-    zip -j /tmp/pvpn-win-configs.zip /tmp/client.ovpn /tmp/stunnel.conf
 
 }
 
