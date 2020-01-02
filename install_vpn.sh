@@ -255,6 +255,8 @@ confirm_install() {
           echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
           mkdir -p /var/www/html
           echo "create /var/www/html for webfs"
+          echo "start webfs service"
+          systemctl start webfs
       else
           echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
       fi
