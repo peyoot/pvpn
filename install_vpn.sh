@@ -300,7 +300,7 @@ finish_pvpn() {
       iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
       iptables-save > /etc/iptables.rules
       echo 1 > /proc/sys/net/ipv4/ip_forward
-      sed -i "s/^#net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+      sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
       ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
       echo "[Install]" >> /etc/systemd/system/rc-local.service
       echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
