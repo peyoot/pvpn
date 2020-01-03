@@ -295,7 +295,7 @@ finish_pvpn() {
       echo "your strongswan installation and configuration have been done"
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
-      TAP_RULES=$(iptables  -vL|grep tap0 | awk '{print $6}')
+      TAP_RULES=$(iptables  -vL|grep tap0 -m 1 | awk '{print $6}')
       if [ -z $TAP_RULES ]; then
         echo "tap0 iptables rule exist"
       else
