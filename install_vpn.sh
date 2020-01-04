@@ -222,12 +222,23 @@ else
   if [ "1" = "$CHOSEN_VPN_TYPE" ]; then
     echo "Select openvpn over stunnel" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="openvpn"
+    if prompt-yesno "Woud you like to use tap interface in openvpn?" yes; then
+       OVPN_INTERFACE="tap"
+    else
+       OVPN_INTERFACE="tun"
+    fi
+
   elif [ "2" = "$CHOSEN_VPN_TYPE" ]; then
     echo "Select strongswan sole" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="strongswan"
   else
     echo "Select both openvpn/stunnel and strongswan VPN" | tee -a /var/log/pvpn_install.log
     VPN_TYPE="dualvpn"
+    if prompt-yesno "Woud you like to use tap interface in openvpn?" yes; then
+       OVPN_INTERFACE="tap"
+    else
+       OVPN_INTERFACE="tun"
+    fi
   fi
 fi
 }
@@ -507,7 +518,7 @@ ovpnclient_for_win() {
     echo -n "" > /tmp/client.ovpn
     echo "client" >> /tmp/client.ovpn
     echo "proto tcp" >> /tmp/client.ovpn
-    echo "dev tap" >> /tmp/client.ovpn
+    echo "dev ${OVPN_INTERFACE}" >> /tmp/client.ovpn
     echo "ca ca.crt" >> /tmp/client.ovpn
     echo "cert client.crt" >> /tmp/client.ovpn
     echo "key client.key" >> /tmp/client.ovpn
@@ -515,7 +526,7 @@ ovpnclient_for_win() {
     echo "resolv-retry infinite" >> /tmp/client.ovpn
     echo "dhcp-option DNS 1.1.1.1" >> /tmp/client.ovpn
     echo "nobind" >> /tmp/client.ovpn
-    echo "$OVPN_COMPRESS" >> /tmp/client.ovpn
+    echo "${OVPN_COMPRESS}" >> /tmp/client.ovpn
 
 }
 
@@ -592,7 +603,7 @@ ovpn_config_file() {
     echo -n "" > $OVPN_CONFIG_SDIR/server.conf
     echo "port 11000" >> $OVPN_CONFIG_SDIR/server.conf
     echo "proto tcp" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "dev tap" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_SDIR/server.conf
     echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "cert /etc/openvpn/server.crt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "key /etc/openvpn/server.key" >> $OVPN_CONFIG_SDIR/server.conf
@@ -639,7 +650,7 @@ ovpn_config_file() {
     echo -n "" > $OVPN_CONFIG_CDIR/client.conf
     echo "client" >> $OVPN_CONFIG_CDIR/client.conf
     echo "proto tcp" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "dev tap" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_CDIR/client.conf
     echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_CDIR/client.conf
     echo "cert /etc/openvpn/client.crt" >> $OVPN_CONFIG_CDIR/client.conf
     echo "key /etc/openvpn/client.key" >> $OVPN_CONFIG_CDIR/client.conf
