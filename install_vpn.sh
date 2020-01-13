@@ -418,6 +418,7 @@ generate_certs() {
       echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
       ovpnclient_for_win 
+      echo "Now also generate pkcs12 cert for client. If you don't want to set export password,just press Enter"
       openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12
       zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn /tmp/stunnel.conf
     else
@@ -468,6 +469,7 @@ generate_certs() {
         if [ "yes" = "$NEDDDH" ] ; then
           openssl dhparam -out dh.pem 2048
         fi
+        echo "Now also generate a pkcs12 cert for client. If you don't want to set export password. Just press Enter"
         openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12
         zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
         rm -rf ./dh.pem
