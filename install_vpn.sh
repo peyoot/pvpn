@@ -296,7 +296,7 @@ finish_pvpn() {
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
       TAP_RULES=$(iptables  -vL|grep tap0 -m 1 | awk '{print $6}')
-      if [ -z $TAP_RULES ]; then
+      if [ -n "$TAP_RULES" ]; then
         echo "tap0 iptables rule exist"
       else
         echo "set iptables rule for openvpn"
@@ -407,7 +407,8 @@ generate_certs() {
       echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
       ovpnclient_for_win 
-      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.ovpn /tmp/stunnel.conf
+      openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12
+      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn /tmp/stunnel.conf
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
@@ -456,9 +457,10 @@ generate_certs() {
         if [ "yes" = "$NEDDDH" ] ; then
           openssl dhparam -out dh.pem 2048
         fi
-        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+        openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12
+        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
         rm -rf ./dh.pem
- 
+        rm -rf ./client.p12
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
         cp /etc/openvpn/server.crt /etc/stunnel/
