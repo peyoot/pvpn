@@ -504,7 +504,7 @@ generate_certs() {
       cp /tmp/stunnel.conf /var/www/html/
       echo "Please download from http://your-server-ip:8000 "
       echo "if you use openvpn, remember put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
-      rm -rf /tmp/client.* /tmp/stunnel.conf /tmp/ca.crt
+      rm -rf /tmp/client.* /tmp/stunnel.conf /tmp/ca.crt /tmp/pvpn*.zip
     fi
   else
    echo "you need to download your client certs (in /tmp/) for the use in client PC"
