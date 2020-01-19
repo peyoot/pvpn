@@ -181,6 +181,19 @@ else
       fi 
 fi
 echo "Your ubuntu version is: ${UBUNTU_VERSION}"
+SERVER_URL=$(prompt "Please input the server public IP:" "")
+if [ -n "$SERVER_URL" ]
+   echo "you need input the VPN server's public IP address so that scripts know how to configure it"
+   echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
+   IPADDR=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)
+   if prompt-yesno "Is your server IP address ${IPADDR} ?" yes; then 
+     SERVER_URL="$IPADDR"
+   else
+     echo "pvpn installation aborted"
+     exit 1
+   fi
+
+fi
 #set necessary variables
 NEEDPKICA="yes"
 NEEDDH="yes"
@@ -518,7 +531,6 @@ ovpnclient_for_win() {
     echo "[openvpn-localhost]" >> /tmp/stunnel.conf
     echo "client=yes" >> /tmp/stunnel.conf
     echo "accept = 127.0.0.1:11000" >> /tmp/stunnel.conf
-    SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "connect = ${SERVER_URL}:8443" >> /tmp/stunnel.conf
 #configure openvpn client for windows
     echo -n "" > /tmp/client.ovpn
@@ -650,7 +662,6 @@ ovpn_config_file() {
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
     echo "accept = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
-    SERVER_URL=$(prompt "Please input the openvpn server IP:" "")
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
     echo -n "" > $OVPN_CONFIG_CDIR/client.conf
@@ -751,7 +762,6 @@ else
     echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
     echo "  leftcert=clientcert.pem" >> /etc/ipsec.conf
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
-    SERVER_URL=$(prompt "Please input the server IP:" "")
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
     RIGHT_SUBNET=$(prompt "Please input the client subnet:" "10.0.1.0/24")
