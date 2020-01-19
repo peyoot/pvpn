@@ -182,7 +182,7 @@ else
 fi
 echo "Your ubuntu version is: ${UBUNTU_VERSION}"
 SERVER_URL=$(prompt "Please input the server public IP:" "")
-if [ -n "$SERVER_URL" ]
+if [ -n "$SERVER_URL" ]; then
    echo "you need input the VPN server's public IP address so that scripts know how to configure it"
    echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
    IPADDR=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)
