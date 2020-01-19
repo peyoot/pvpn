@@ -266,8 +266,6 @@ confirm_install() {
           echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
           mkdir -p /var/www/html
           echo "create /var/www/html for webfs"
-          echo "start webfs service"
-          systemctl start webfs
       else
           echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
       fi
@@ -298,9 +296,13 @@ confirm_setting() {
 
 finish_pvpn() {
   if [ "server" = "$VPN_MODE" ]; then 
-    echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
-    systemctl stop webfs |at now + 24 hours
-    echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+    if [ ! -e /etc/webfsd.conf ]; then
+      echo "start webfs service"
+      systemctl start webfs
+      echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
+      systemctl stop webfs |at now + 24 hours
+      echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+    fi
     echo "Now set iptables to finish the pvpn install"
     if [ "strongswan" = "$VPN_TYPE" ]; then
       echo "your strongswan installation and configuration have been done"
@@ -420,7 +422,7 @@ generate_certs() {
       ovpnclient_for_win 
       echo "Now also generate pkcs12 cert for client. If you don't want to set export password,just press Enter"
       openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12
-      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn /tmp/stunnel.conf
+      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
@@ -761,8 +763,8 @@ else
     echo ": RSA clientkey.pem" >> /etc/ipsec.secrets
 
     echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up nat-t"
-    echo "Please download http://$SERVER_URL:8000/clients-ipsec.zip and put it in the right place of your client"
-    echo "To extract to the right place: sudo unzip clients-ipsec.zip -d /etc/"
+    echo "Please download http://$SERVER_URL:8000/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
+    echo "To extract to the right place: sudo unzip pvpn-ipsec-clientcerts.zip -d /etc/"
 fi
 
 }
