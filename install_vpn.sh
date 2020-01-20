@@ -453,6 +453,16 @@ generate_certs() {
         cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
         cp /etc/ipsec.d/cacerts/cacert.pem /etc/openvpn/ca.crt
         openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/servercert.pem -inkey /etc/ipsec.d/private/serverkey.pem -out /etc/stunnel/server.p12 -passout pass:
+        if [ -e /etc/openvpn/dh.pem ]; then
+            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+               echo "use current dh.pem"
+               NEEDDH="no"
+            fi
+        fi
+        if [ "yes" = "$NEEDDH" ] ; then
+          openssl dhparam -out dh.pem 2048
+          mv dh.pem /etc/openvpn/
+        fi
     fi
 
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
@@ -479,19 +489,9 @@ generate_certs() {
         mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
         mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
-        if [ -e /etc/openvpn/dh.pem ] ; then
-            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
-               echo "use current dh.pem"
-               NEEDDH="no"
-            fi
-        fi
-        if [ "yes" = "$NEEDDH" ] ; then
-          openssl dhparam -out dh.pem 2048
-        fi
         echo "Now also generate a pkcs12 cert for client. "
         openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12 -passout pass:
         zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
-        rm -rf ./dh.pem
         rm -rf ./client.p12
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
