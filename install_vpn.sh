@@ -411,8 +411,8 @@ generate_certs() {
     sleep 1
     ./easyrsa sign server server
     echo "copy server key and cert to config folder"
-    cp  ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
-    cp  ./pki/private/server.key ./pki/issued/server.crt /etc/stunnel/
+    openssl pkcs -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12
+    cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
     if [ -e /etc/openvpn/dh.pem ] ; then
         if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
            echo "use current dh.pem"
@@ -492,9 +492,8 @@ generate_certs() {
         rm -rf ./client.p12
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
-        cp /etc/openvpn/server.crt /etc/stunnel/
-        cp /etc/openvpn/server.key /etc/stunnel/
         ovpnclient_for_win
+        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/server.pem -inkey /etc/ipsec.d/private/server.key -out /etc/stunnel/server.p12
       fi
 
 # end of if dualvpn
@@ -612,8 +611,7 @@ ovpn_config_file() {
     rm -rf $OVPN_CONFIG_SDIR/server.conf
     echo -n "" > /etc/stunnel/stunnel.conf
 #   fetch_server_auth
-    echo "cert=/etc/stunnel/server.crt" >> /etc/stunnel/stunnel.conf
-    echo "key=/etc/stunnel/server.key" >> /etc/stunnel/stunnel.conf
+    echo "cert=/etc/stunnel/server.p12" >> /etc/stunnel/stunnel.conf
     echo "client=no" >> /etc/stunnel.conf
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "accept = 8443" >> /etc/stunnel/stunnel.conf
