@@ -631,7 +631,8 @@ ovpn_config_file() {
     echo "server 10.8.0.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 208.67.222.222\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
     echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
     echo "keepalive 10 120" >> $OVPN_CONFIG_SDIR/server.conf
@@ -686,8 +687,8 @@ ovpn_config_file() {
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.up
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "script-security 2" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "up ${OVPN_CONFIG_CDIR}/nonvpn-routes.up" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "down ${OVPN_CONFIG_CDIR}/nonvpn-routes.down" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "#up ${OVPN_CONFIG_CDIR}/nonvpn-routes.up" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "#down ${OVPN_CONFIG_CDIR}/nonvpn-routes.down" >> $OVPN_CONFIG_CDIR/client.conf
     echo -n "" > $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "#!/bin/bash" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
