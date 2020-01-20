@@ -411,7 +411,7 @@ generate_certs() {
     sleep 1
     ./easyrsa sign server server
     echo "copy server key and cert to config folder"
-    openssl pkcs -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12
+    openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12
     cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
     if [ -e /etc/openvpn/dh.pem ] ; then
         if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
