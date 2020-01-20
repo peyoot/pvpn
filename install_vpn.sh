@@ -767,7 +767,7 @@ else
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
-    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "10.0.1.0/24")
+    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
     echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
