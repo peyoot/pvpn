@@ -411,7 +411,7 @@ generate_certs() {
     sleep 1
     ./easyrsa sign server server
     echo "copy server key and cert to config folder"
-    openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12
+    openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12 -passout pass:
     cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
     if [ -e /etc/openvpn/dh.pem ] ; then
         if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
@@ -433,8 +433,8 @@ generate_certs() {
       echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
       cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
       ovpnclient_for_win 
-      echo "Now also generate pkcs12 cert for client. If you don't want to set export password,just press Enter"
-      openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12
+      echo "Now also generate pkcs12 cert for client. "
+      openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12 -passout pass:
       zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn
     else
        echo "Please manually put client ca,key,cert in client PC"
@@ -485,15 +485,15 @@ generate_certs() {
         if [ "yes" = "$NEEDDH" ] ; then
           openssl dhparam -out dh.pem 2048
         fi
-        echo "Now also generate a pkcs12 cert for client. If you don't want to set export password. Just press Enter"
-        openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12
+        echo "Now also generate a pkcs12 cert for client. "
+        openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12 -passout pass:
         zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
         rm -rf ./dh.pem
         rm -rf ./client.p12
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
         ovpnclient_for_win
-        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/server.pem -inkey /etc/ipsec.d/private/server.key -out /etc/stunnel/server.p12
+        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/server.pem -inkey /etc/ipsec.d/private/server.key -out /etc/stunnel/server.p12 -passout pass:
       fi
 
 # end of if dualvpn
@@ -783,13 +783,10 @@ fi
 
 ipsec_install() {
   echo "about to install both strongswan and openvpn"
-  echo "apt install -y strongswan" | tee -a /var/log/pvpn_install.log
-  apt install -y strongswan 
+  echo "apt install -y strongswan strongswan-pki" | tee -a /var/log/pvpn_install.log
+  apt install -y strongswan strongswan-pki 
   if [ "dualvpn" = "$VPN_TYPE" ]; then
     openvpn_install
-  else
-    echo "apt install -y strongswan-pki" | tee -a /var/log/pvpn_install.log
-    apt install -y strongswan-pki
   fi
 }
 
