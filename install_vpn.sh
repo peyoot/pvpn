@@ -446,6 +446,14 @@ generate_certs() {
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
     ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
     echo "Server cert has been generated now"
+    echo "check vpn type and copy certs for dualvpn"
+    if [ "dualvpn" = "$VPN_TYPE" ]; then
+        echo "Copy to openvpn config file"
+        cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
+        cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
+        cp /etc/ipsec.d/cacerts/cacert.pem /etc/openvpn/ca.crt
+        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/servercert.pem -inkey /etc/ipsec.d/private/serverkey.pem -out /etc/stunnel/server.p12 -passout pass:
+    fi
 
     echo "Now Create client cert,Please input username if you would like to generate specific cert"
     CLIENT_USER=$(prompt "Please input the username of client:" "client")
@@ -468,14 +476,9 @@ generate_certs() {
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
         echo "Copy to openvpn config file"
-        cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
-        cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
-
         mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
         mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
-        cp /tmp/ipsec.d/cacerts/ca.crt /etc/openvpn/ca.crt
-
         if [ -e /etc/openvpn/dh.pem ] ; then
             if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
                echo "use current dh.pem"
@@ -493,7 +496,6 @@ generate_certs() {
         echo "start to configure stunnel4 and openvpn server mode"
         echo "copy server key and cert for stunnel4"
         ovpnclient_for_win
-        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/server.pem -inkey /etc/ipsec.d/private/server.key -out /etc/stunnel/server.p12 -passout pass:
       fi
 
 # end of if dualvpn
