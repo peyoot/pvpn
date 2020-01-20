@@ -474,6 +474,7 @@ generate_certs() {
         mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
         mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
+        cp /tmp/ipsec.d/cacerts/ca.crt /etc/openvpn/ca.crt
 
         if [ -e /etc/openvpn/dh.pem ] ; then
             if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
@@ -481,7 +482,7 @@ generate_certs() {
                NEEDDH="no"
             fi
         fi
-        if [ "yes" = "$NEDDDH" ] ; then
+        if [ "yes" = "$NEEDDH" ] ; then
           openssl dhparam -out dh.pem 2048
         fi
         echo "Now also generate a pkcs12 cert for client. If you don't want to set export password. Just press Enter"
