@@ -649,7 +649,7 @@ ovpn_config_file() {
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable $OVPN_SSERVICE
       systemctl start $OVPN_SSERVICE
-      systemctl start stunnel4
+      systemctl restart stunnel4
 #      /etc/init.d/stunnel4 start
     else
       echo "You need to manually start your openvpn server by typing systemctl start openvpn-server@server"
@@ -717,7 +717,7 @@ ovpn_config_file() {
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route"
     fi 
-    systemctl start stunnel4
+    systemctl restart stunnel4
 #    /etc/init.d/stunnel4 start
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
     echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
