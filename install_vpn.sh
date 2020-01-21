@@ -700,8 +700,8 @@ ovpn_config_file() {
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.up
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "script-security 2" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "up ${OVPN_CONFIG_CDIR}/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "down ${OVPN_CONFIG_CDIR}/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "up /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "down /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
     echo -n "" > $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "#!/bin/bash" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
