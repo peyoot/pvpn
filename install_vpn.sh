@@ -187,7 +187,8 @@ SERVER_URL=$(prompt "Please input the server public IP:" "")
 if [ -z "$SERVER_URL" ]; then
    echo "you need input the VPN server's public IP address so that scripts know how to configure it"
    echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
-   IPADDR=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)
+   IPADDR=$(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/' -f 1)
+   echo "SERVER IP=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)"
    if prompt-yesno "Is your server IP address ${IPADDR} ?" yes; then 
      SERVER_URL="$IPADDR"
    else
@@ -348,7 +349,12 @@ finish_pvpn() {
     if [ "openvpn" != "$VPN_TYPE" ]; then
       echo "You'll need to use ipsec certs to configure your client.Scripts now try to download it from server"
       wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
-      unzip pvpn-ipsec-clientcerts.zip -d /etc/
+      if prompt-yesno "Would you like to use client config file generate from server" "yes" ; then
+          unzip pvpn-ipsec-clientcerts.zip -d /etc/
+      else
+          unzip pvpn-ipsec-clientcerts.zip -d /etc/ -x ipsec.conf
+      fi
+
       if [ "dualvpn" = "$VPN_TYPE" ]; then
         wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
         unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
@@ -495,7 +501,8 @@ generate_certs() {
 
       echo "pack ipsec pki client certs"
       cd /tmp
-      zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/*
+      ipsecclient_from_server
+      zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/* ./ipsec.conf
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
         echo "Copy to openvpn config file"
@@ -512,7 +519,7 @@ generate_certs() {
       fi
 
 # end of if dualvpn
-      rm -rf /tmp/ipsec.d
+      rm -rf /tmp/ipsec.d /tmp/ipsec.conf
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
     else
@@ -560,8 +567,28 @@ ovpnclient_for_win() {
     echo "dhcp-option DNS 1.1.1.1" >> /tmp/client.ovpn
     echo "nobind" >> /tmp/client.ovpn
     echo "${OVPN_COMPRESS}" >> /tmp/client.ovpn
+}
+
+ipsecclient_from_server() {
+    echo -n "" > /tmp/ipsec.conf
+    echo "config setup" >> /tmp/ipsec.conf
+    echo "  # strictcrlpolicy=yes" >> /tmp/ipsec.conf
+    echo "  # uniquyeids=no" >> /tmp/ipsec.conf
+    echo "conn %default" >> /tmp/ipsec.conf
+    echo "  keyexchange=ikev2" >> /tmp/ipsec.conf
+    echo "  ike=aes256-sha1-modp1024" >> /tmp/ipsec.conf
+    echo "conn nat-t" >> /tmp/ipsec.conf
+    echo "  left=%defaultroute" >> /tmp/ipsec.conf
+    echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /tmp/ipsec.conf
+    echo "  leftcert=clientcert.pem" >> /tmp/ipsec.conf
+    echo "  leftfirewall=yes" >> /tmp/ipsec.conf
+    echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
+    echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /tmp/ipsec.conf
+    echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+    echo "  auto=add" >> /tmp/ipsec.conf
 
 }
+
 
 
 ipsec_config() {
@@ -765,6 +792,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
     echo "ipsec configuration is ready to work now,please remember to open server's 500,4500 port and run ipsec restart before you can set up ipsec tunnel"
+
 else
     echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
@@ -781,8 +809,12 @@ else
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
-    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
+    if [ -z "$RIGHT_SUBNET" ]; then
+      echo "#  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    else
+      echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    fi
     echo "  auto=add" >> /etc/ipsec.conf
 
     echo "now configuring VPN authenticaion method"
@@ -805,6 +837,9 @@ ipsec_install() {
   if [ "dualvpn" = "$VPN_TYPE" ]; then
     openvpn_install
   fi
+  echo "try to get the server subnet"
+  SERVER_SUBNET=$(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/')
+
 }
 
 openvpn_install()  {
