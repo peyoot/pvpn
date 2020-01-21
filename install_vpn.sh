@@ -789,7 +789,8 @@ fi
 ipsec_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan strongswan-pki" | tee -a /var/log/pvpn_install.log
-  apt install -y strongswan strongswan-pki 
+  apt install -y strongswan
+  apt install -y  strongswan-pki 
   if [ "dualvpn" = "$VPN_TYPE" ]; then
     openvpn_install
   fi
