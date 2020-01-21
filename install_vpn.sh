@@ -345,10 +345,19 @@ finish_pvpn() {
     fi
   else
     echo "You have set up your vpn client mode with pvpn tools. "
-    if [ "strongswan" = "$VPN_TYPE" ]; then
-      echo "You'll need to use ipsec certs to configure your client"
+    if [ "openvpn" != "$VPN_TYPE" ]; then
+      echo "You'll need to use ipsec certs to configure your client.Scripts now try to download it from server"
+      wget http://${server_url}:8000/pvpn-ipsec-certs.zip
+      unzip pvpn-ipsec-certs.zip -d /etc/
+      if [ "dualvpn" = "$VPN_TYPE" ]; then
+        wget http://${server_url}:8000/pvpn-ovpn-certs.zip
+        unzip pvpn-ovpn-certs.zip -x client.ovpn -d /etc/openvpn/
+      fi
     else
-      echo "Please download certs and put it in the right place. Download pvpn-win-configs.zip and unzip it. put the stunel.conf in stunnel config path and put client.conf in openvpn config path."
+      echo "Please download certs and put it in the right place. Put the stunel.conf in stunnel config path and put client.conf in openvpn config path."
+      echo "Scripts now will try to download from server and extract it into the right place"
+      wget http://${server_url}:8000/pvpn-ovpn-certs.zip
+      unzip pvpn-ovpn-certs.zip -x client.ovpn -d /etc/openvpn/
     fi
 
   fi
