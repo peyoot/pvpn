@@ -359,7 +359,9 @@ finish_pvpn() {
       wget http://${server_url}:8000/pvpn-ovpn-certs.zip
       unzip pvpn-ovpn-certs.zip -x client.ovpn -d /etc/openvpn/
     fi
-
+    sleep 1
+    echo "your vpn client have been installed and is ready for your usage."
+    rm -rf pvpn*.zip
   fi
 
 }
