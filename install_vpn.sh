@@ -347,10 +347,10 @@ finish_pvpn() {
     echo "You have set up your vpn client mode with pvpn tools. "
     if [ "openvpn" != "$VPN_TYPE" ]; then
       echo "You'll need to use ipsec certs to configure your client.Scripts now try to download it from server"
-      wget http://${server_url}:8000/pvpn-ipsec-certs.zip
+      wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
       unzip pvpn-ipsec-certs.zip -d /etc/
       if [ "dualvpn" = "$VPN_TYPE" ]; then
-        wget http://${server_url}:8000/pvpn-ovpn-certs.zip
+        wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
         unzip pvpn-ovpn-certs.zip -x client.ovpn -d /etc/openvpn/
       fi
     else
