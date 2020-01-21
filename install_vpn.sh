@@ -346,30 +346,32 @@ finish_pvpn() {
     fi
   else
     echo "You have set up your vpn client mode with pvpn tools. "
-    if [ "openvpn" != "$VPN_TYPE" ]; then
-      echo "You'll need to use ipsec certs to configure your client.Scripts now try to download it from server"
-      wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
-      if prompt-yesno "Would you like to use client config file generate from server" "yes" ; then
+    if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
+      if [ "openvpn" != "$VPN_TYPE" ]; then
+        echo "Scripts now try to download ipsec client certs and config from server"
+        wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
+        if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "yes" ; then
           unzip pvpn-ipsec-clientcerts.zip -d /etc/
-      else
+        else
           unzip pvpn-ipsec-clientcerts.zip -d /etc/ -x ipsec.conf
-      fi
+        fi
 
-      if [ "dualvpn" = "$VPN_TYPE" ]; then
-        wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
+        if [ "dualvpn" = "$VPN_TYPE" ]; then
+          wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
+          unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
+        fi
+      else
+        echo "Scripts now will try to download from server and extract it into the right place"
+        wget http://${server_url}:8000/pvpn-openvpn-clientcerts.zip
         unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
+      sleep 1
+      echo "your vpn client have been installed and is ready for your usage."
+      rm -rf pvpn*.zip
     else
-      echo "Please download certs and put it in the right place. Put the stunel.conf in stunnel config path and put client.conf in openvpn config path."
-      echo "Scripts now will try to download from server and extract it into the right place"
-      wget http://${server_url}:8000/pvpn-openvpn-clientcerts.zip
-      unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
+      echo "To start the VPN service please download the client certs from http://${SERVER_URL}:8000/,You also need to put it in the right place"
     fi
-    sleep 1
-    echo "your vpn client have been installed and is ready for your usage."
-    rm -rf pvpn*.zip
   fi
-
 }
 
 use_existingCA() {
