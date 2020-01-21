@@ -164,6 +164,7 @@ if [ "18.04" = "${UBUNTU_VERSION}" ]; then
       OVPN_CSERVICE="openvpn-client@client"
       OVPN_COMPRESS="compress lz4-v2"
       OVPN_LOG_DIR="/var/log/openvpn"
+      DNS_UPDATER="update-systemd-resolved"
 else 
       OVPN_CONFIG_SDIR="/etc/openvpn"
       OVPN_SSERVICE="openvpn@server"
@@ -171,6 +172,7 @@ else
       OVPN_CSERVICE="openvpn@client"
       OVPN_COMPRESS="comp-lzo"
       OVPN_LOG_DIR="/var/log"
+      DNS_UPDATER="update-resolv-conf"
       if [ "16.04" != "${UBUNTU_VERSION}" ]; then
          if prompt-yesno "This script only verified in ubuntu. Please do not try it in non-debian distribution!Contine?" no; then 
              echo "only ubuntu 16.04 and 14.04 are verified. Take your own risk to try it in other version"
@@ -687,8 +689,8 @@ ovpn_config_file() {
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.up
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "script-security 2" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "#up ${OVPN_CONFIG_CDIR}/nonvpn-routes.up" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "#down ${OVPN_CONFIG_CDIR}/nonvpn-routes.down" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "up ${OVPN_CONFIG_CDIR}/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "down ${OVPN_CONFIG_CDIR}/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
     echo -n "" > $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "#!/bin/bash" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
@@ -824,26 +826,33 @@ openvpn_install()  {
     apt install -y openvpn
   fi
  
- echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
-  if [ "openvpn" = "$VPN_TYPE" ] ; then
-     echo "you're about to install easyRSA3 as PKI tool"
-     if [ -e /etc/openvpn/easyrsa ] ; then
-       if prompt-yesno "easyrsa PKI already there, type yes if you want to remove it first and then download a new one?" "no" ; then
-         rm -rf /etc/openvpn/easyrsa*
-         rm -rf  /tmp/EasyRSA*
-       else  
-         EASYRSA_EXIST="yes"
-         echo "you've chosen to use existing easyrsa as PKI"
+  echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
+  if [ "openvpn" = "$VPN_TYPE" ]; then
+    if [ "server" = "$VPN_MODE" ]; then
+       echo "you're about to install easyRSA3 as PKI tool"
+       if [ -e /etc/openvpn/easyrsa ]; then
+         if prompt-yesno "easyrsa PKI already there, type yes if you want to remove it first and then download a new one?" "no" ; then
+           rm -rf /etc/openvpn/easyrsa*
+           rm -rf  /tmp/EasyRSA*
+         else  
+           EASYRSA_EXIST="yes"
+           echo "you've chosen to use existing easyrsa as PKI"
+         fi
        fi
-     fi
-     if [ "no" = "$EASYRSA_EXIST" ] ; then
-       echo "Download EasyRSA-unix-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
-       wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
-       tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
-       mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
-     fi
+       if [ "no" = "$EASYRSA_EXIST" ] ; then
+         echo "Download EasyRSA-unix-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
+         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
+         tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
+         mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
+       fi
+    fi
+
   else
     echo "you'll use stongswan PKI in openvpn."
+  fi
+  if [ "client" = "$VPN_MODE" ]; then
+    echo "Now try to install openvpn-dns-scripts for 18.04 "
+    apt install openvpn-systemd-resolved -y
   fi
 
   echo "configure stunnel4 auto-start here"
