@@ -511,13 +511,12 @@ generate_certs() {
         mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
         mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
+        ovpnclient_for_win
         echo "Now also generate a pkcs12 cert for client. "
         openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12 -passout pass:
-        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/*
+        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/* /tmp/client.ovpn
         rm -rf ./client.p12
-        echo "start to configure stunnel4 and openvpn server mode"
-        echo "copy server key and cert for stunnel4"
-        ovpnclient_for_win
+        rm -rf /tmp/client.ovpn
       fi
 
 # end of if dualvpn
