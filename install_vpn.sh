@@ -187,8 +187,8 @@ SERVER_URL=$(prompt "Please input the server public IP:" "")
 if [ -z "$SERVER_URL" ]; then
    echo "you need input the VPN server's public IP address so that scripts know how to configure it"
    echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
-   IPADDR=$(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/' -f 1)
-   echo "SERVER IP=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)"
+   echo "SERVER CIDR detecting $(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/' -f 1)"
+   IPADDR=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)\/(.*)/, "\\1", "g", $2)}'|head -1)
    if prompt-yesno "Is your server IP address ${IPADDR} ?" yes; then 
      SERVER_URL="$IPADDR"
    else
@@ -840,7 +840,7 @@ ipsec_install() {
     openvpn_install
   fi
   echo "try to get the server subnet"
-  SERVER_SUBNET=$(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/')
+  SERVER_SUBNET=$(ip addr | awk '/^[0-9]+: / {}; /inet.*global/ {print gensub(/(.*)/, "\\1", "g", $2)}'|head -1)
 
 }
 
