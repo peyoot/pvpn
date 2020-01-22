@@ -319,6 +319,10 @@ finish_pvpn() {
       systemctl stop webfs |at now + 24 hours
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
     fi
+    if [ "openvpn" != "$VPN_TYPE" ]; then
+      echo "restart ipsec"
+      ipsec restart
+    fi
     echo "Now set iptables to finish the pvpn install"
     if [ "strongswan" = "$VPN_TYPE" ]; then
       echo "your strongswan installation and configuration have been done"
