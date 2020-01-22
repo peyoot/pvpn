@@ -322,6 +322,8 @@ finish_pvpn() {
     if [ "openvpn" != "$VPN_TYPE" ]; then
       echo "restart ipsec"
       ipsec restart
+    else
+      systemctl restart openvpn-server@server
     fi
     echo "Now set iptables to finish the pvpn install"
     if [ "strongswan" = "$VPN_TYPE" ]; then
@@ -333,7 +335,7 @@ finish_pvpn() {
         echo "tap0 iptables rule exist"
       else
         echo "set iptables rule for openvpn"
-        iptables -A FORWARD -i tap0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+        iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
         iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
@@ -355,19 +357,19 @@ finish_pvpn() {
         echo "Scripts now try to download ipsec client certs and config from server"
         wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
         if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "yes" ; then
-          unzip pvpn-ipsec-clientcerts.zip -d /etc/
+          unzip -o pvpn-ipsec-clientcerts.zip -d /etc/
         else
-          unzip pvpn-ipsec-clientcerts.zip -d /etc/ -x ipsec.conf
+          unzip -o pvpn-ipsec-clientcerts.zip -d /etc/ -x ipsec.conf
         fi
 
         if [ "dualvpn" = "$VPN_TYPE" ]; then
           wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
-          unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
+          unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
         fi
       else
         echo "Scripts now will try to download from server and extract it into the right place"
         wget http://${server_url}:8000/pvpn-openvpn-clientcerts.zip
-        unzip pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
+        unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
       sleep 1
       echo "your vpn client have been installed and is ready for your usage."
