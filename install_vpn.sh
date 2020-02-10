@@ -602,7 +602,7 @@ ipsec_config() {
   if [ "server" = "$VPN_MODE" ]; then
 
     echo "you'll use ipsec pki"
-    if [ -e /etc/ipsec.d/cacerts/ca.crt ]; then
+    if [ -e /etc/ipsec.d/cacerts/cacert.pem ]; then
        if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
          echo "use current CA"
          NEEDPKICA="no"
