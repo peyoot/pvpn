@@ -603,12 +603,14 @@ ipsec_config() {
 
     echo "you'll use ipsec pki"
     if [ -e /etc/ipsec.d/cacerts/cacert.pem ]; then
-       if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
-         echo "use current CA"
-         NEEDPKICA="no"
-       else
-         echo "Re-initial PKI and generat a new CA"
-       fi
+      if [ -e /etc/ipsec.d/private/cakey.pem ]; then
+         if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+           echo "use current CA"
+           NEEDPKICA="no"
+         else
+           echo "Re-initial PKI and generat a new CA"
+         fi
+      fi
     fi
     if [ "yes" = "$NEEDPKICA" ]; then
       InitPKI_buildCA
@@ -626,16 +628,18 @@ ipsec_config() {
 
 openvpn_config() {
   echo "you'll use openvpn and easyRSA as PKI tool"
-  if [ "server" = "$VPN_MODE" ] ; then
+  if [ "server" = "$VPN_MODE" ]; then
     echo "You'll configure opevpn server mode"
     cd /etc/openvpn/easyrsa
     echo "Now in /etc/openvpn/easyrsa"
-    if  [ -e /etc/openvpn/ca.crt ] ; then
-      if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
-        echo "use current CA"
-        NEEDPKICA="no"
-      else
-        echo "Re-initial PKI and generat a new CA"
+    if  [ -e /etc/openvpn/ca.crt ]; then
+      if [ -e /etc/openvpn/ca.key ]; then
+        if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
+          echo "use current CA"
+          NEEDPKICA="no"
+        else
+          echo "Re-initial PKI and generat a new CA"
+        fi
       fi
     fi
     if [ "yes" = "$NEEDPKICA" ] ; then
