@@ -805,7 +805,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "  # leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=%any" >> /etc/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsourceip=10.10.100.0/24"
+      echo "  rightsourceip=10.10.100.0/24" >> /etc/ipsec.conf
     else
       RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
       echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
