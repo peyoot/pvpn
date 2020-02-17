@@ -200,6 +200,8 @@ fi
 #set necessary variables
 NEEDPKICA="yes"
 NEEDDH="yes"
+
+
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
    VPN_TYPE="dual"
@@ -584,15 +586,21 @@ ipsecclient_from_server() {
     echo "conn %default" >> /tmp/ipsec.conf
     echo "  keyexchange=ikev2" >> /tmp/ipsec.conf
     echo "  ike=aes256-sha1-modp1024" >> /tmp/ipsec.conf
+
+
     echo "conn nat-t" >> /tmp/ipsec.conf
     echo "  left=%defaultroute" >> /tmp/ipsec.conf
-    echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /tmp/ipsec.conf
+    echo "  leftid=@client" >> /tmp/ipsec.conf
     echo "  leftcert=clientcert.pem" >> /tmp/ipsec.conf
+    if [ "yes" = "$VIRTUALIP" ]; then
+      echo "  leftsourceip=%config" >> /etc/ipsec.conf
+    fi
     echo "  leftfirewall=yes" >> /tmp/ipsec.conf
     echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
-    echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /tmp/ipsec.conf
+    echo "  rightid=@server" >> /tmp/ipsec.conf
     echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
     echo "  auto=add" >> /tmp/ipsec.conf
+
 
 }
 
@@ -789,15 +797,21 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
     echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
+
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
     echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
-    echo "  leftid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
+    echo "  leftid=@server" >> /etc/ipsec.conf
     echo "  # leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=%any" >> /etc/ipsec.conf
-    RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-    echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    if [ "yes" = "$VIRTUALIP" ]; then
+      echo "  rightsourceip=10.10.100.0/24"
+    else
+      RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+      echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    fi
     echo "  auto=add" >> /etc/ipsec.conf
+
 
     echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
@@ -815,11 +829,16 @@ else
     echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
-    echo "  leftid=\"C=CN,O=Palfort,CN=client\"" >> /etc/ipsec.conf
+    echo "  leftid=@client" >> /etc/ipsec.conf
     echo "  leftcert=clientcert.pem" >> /etc/ipsec.conf
+    if [ "yes" = "$VIRTUALIP" ]; then
+      echo "  leftsourceip=%config" >> /etc/ipsec.conf
+    fi
+
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
-    echo "  rightid=\"C=CN,O=Palfort,CN=server\"" >> /etc/ipsec.conf
+    echo "  rightid=@server" >> /etc/ipsec.conf
+
     RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
     if [ -z "$RIGHT_SUBNET" ]; then
       echo "#  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
@@ -845,6 +864,12 @@ ipsec_install() {
   echo "apt install -y strongswan strongswan-pki" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan
   apt install -y  strongswan-pki 
+  if prompt-yesno "Would you like IPsec VPN server to allocate virtual IP for clients" yes; then
+    VIRTUALIP="yes"
+  else
+    VIRTUALIP="no"
+  fi
+
   if [ "dualvpn" = "$VPN_TYPE" ]; then
     openvpn_install
   fi
