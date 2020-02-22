@@ -460,11 +460,12 @@ generate_certs() {
     ./easyrsa sign client client
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
-      cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/
+      mkdir -p /tmp/openvpn
+      cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/openvpn/
       ovpnclient_for_win 
       echo "Now also generate pkcs12 cert for client. "
-      openssl pkcs12 -export -clcerts -in /tmp/client.crt -inkey /tmp/client.key -out /tmp/client.p12 -passout pass:
-      zip -j /tmp/pvpn-openvpn-clientcerts.zip /tmp/ca.crt /tmp/client.crt /tmp/client.key /tmp/client.p12 /tmp/client.ovpn
+      openssl pkcs12 -export -clcerts -in ./pki/issued/client.crt -inkey ./pki/private/client.key -out /tmp/openvpn/client.p12 -passout pass:
+      zip -j /tmp/pvpn-openvpn-clientcerts.zip ./pki/ca.crt ./pki/issued/client.crt ./pki/private/client.key /tmp/openvpn/client.p12 /tmp/openvpn/client.ovpn
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
@@ -511,24 +512,42 @@ generate_certs() {
 
       echo "pack ipsec pki client certs"
       cd /tmp
+      echo "VIRTUALIP is  ${VIRTUALIP}"
       ipsecclient_from_server
+      sync
+      openssl pkcs12 -export -clcerts -in ./ipsec.d/certs/clientcert.pem -inkey ./ipsec.d/private/clientkey.pem -out ./client.p12 -passout pass: 
       zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/* ./ipsec.conf
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
         echo "Copy to openvpn config file"
-        mv /tmp/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/ca.crt
-        mv /tmp/ipsec.d/certs/clientcert.pem /tmp/ipsec.d/certs/client.crt
-        mv /tmp/ipsec.d/private/clientkey.pem /tmp/ipsec.d/private/client.key
+        cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
+        cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
+        cp /etc/ipsec.d/cacerts/cacert.pem /etc/openvpn/ca.crt
+        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/servercert.pem -inkey /etc/ipsec.d/private/serverkey.pem -out /etc/stunnel/server.p12 -passout pass:
+        if [ -e /etc/openvpn/dh.pem ]; then
+            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+               echo "use current dh.pem"
+               NEEDDH="no"
+            fi
+        fi
+        if [ "yes" = "$NEEDDH" ] ; then
+          openssl dhparam -out dh.pem 2048   
+          mv dh.pem /etc/openvpn/
+        fi
+
+        mkdir -p /tmp/openvpn
+        echo "Copy to openvpn config file"
+        mv /tmp/ipsec.d/certs/clientcert.pem /tmp/openvpn/client.crt
+        mv /tmp/ipsec.d/private/clientkey.pem /tmp/openvpn/client.key
         ovpnclient_for_win
+        sync
         echo "Now also generate a pkcs12 cert for client. "
-        openssl pkcs12 -export -clcerts -in /tmp/ipsec.d/certs/client.crt -inkey /tmp/ipsec.d/private/client.key -out /tmp/client.p12 -passout pass:
-        zip -j pvpn-openvpn-clientcerts.zip ./dh.pem ./client.p12 ./ipsec.d/cacerts/ca.crt ./ipsec.d/certs/* ./ipsec.d/private/* /tmp/client.ovpn
-        rm -rf ./client.p12
-        rm -rf /tmp/client.ovpn
+#        openssl pkcs12 -export -clcerts -in /tmp/openvpn/client.crt -inkey /tmp/openvpn/client.key -out /tmp/client.p12 -passout pass:
+        zip -j pvpn-openvpn-clientcerts.zip ./client.p12 ./client.ovpn /etc/openvpn/ca.crt ./openvpn/client.crt ./openvpn/client.key
       fi
 
 # end of if dualvpn
-      rm -rf /tmp/ipsec.d /tmp/ipsec.conf
+      rm -rf /tmp/ipsec.d 
       cd $WORK_DIR
       echo "now in  ${WORK_DIR}"
     else
@@ -540,15 +559,22 @@ generate_certs() {
   if [ -e /etc/webfsd.conf ] ; then
     echo "put in webfs for downloads"
     cp /tmp/pvpn*.zip /var/www/html/
-    if [ strongswan = "$VPN_TYPE" ]; then
-      echo "Please download from http://your-server-ip:8000/pvpn-ipsec-clientcerts.zip and put it in client configuration path"
-      rm -rf /tmp/ca.crt /tmp/pvpn*.zip
 
-    else
-      cp /tmp/stunnel.conf /var/www/html/
-      echo "Please download from http://your-server-ip:8000 "
-      echo "if you use openvpn, remember put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
-      rm -rf /tmp/client.* /tmp/stunnel.conf /tmp/ca.crt /tmp/pvpn*.zip
+    echo "In linux, you can choose to autodownload and config clients. But please download from http://your-server-ip:8000/ and put it in client configuration path in other OS"
+    if [ openvpn = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
+      echo "you have openvpn installed"
+      mkdir -p /var/www/html/openvpn
+      cp /tmp/openvpn/* /var/www/html/openvpn/
+      echo "For openvpn, please put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
+      rm -rf /tmp/client.* /tmp/openvpn/* /tmp/pvpn-o*.zip
+    fi
+    if [ strongswan = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
+      echo "you have strongswan installed"
+      mkdir -p /var/www/html/strongswan
+      cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/strongswan/
+      mv /tmp/client.p12 /var/www/html/strongswan/
+      mv /tmp/ipsec.conf /var/www/html/strongswan/
+      rm -rf /tmp/pvpn-i*.zip /tmp/client.* /tmp/ipsec.conf
     fi
   else
    echo "you need to download your client certs (in /tmp/) for the use in client PC"
@@ -558,24 +584,24 @@ generate_certs() {
 
 ovpnclient_for_win() {
     echo "now generate windows client config"
-    echo -n "" > /tmp/stunnel.conf
-    echo "[openvpn-localhost]" >> /tmp/stunnel.conf
-    echo "client=yes" >> /tmp/stunnel.conf
-    echo "accept = 127.0.0.1:11000" >> /tmp/stunnel.conf
-    echo "connect = ${SERVER_URL}:8443" >> /tmp/stunnel.conf
+    echo -n "" > /tmp/openvpn/stunnel.conf
+    echo "[openvpn-localhost]" >> /tmp/openvpn/stunnel.conf
+    echo "client=yes" >> /tmp/openvpn/stunnel.conf
+    echo "accept = 127.0.0.1:11000" >> /tmp/openvpn/stunnel.conf
+    echo "connect = ${SERVER_URL}:8443" >> /tmp/openvpn/stunnel.conf
 #configure openvpn client for windows
-    echo -n "" > /tmp/client.ovpn
-    echo "client" >> /tmp/client.ovpn
-    echo "proto tcp" >> /tmp/client.ovpn
-    echo "dev ${OVPN_INTERFACE}" >> /tmp/client.ovpn
-    echo "ca ca.crt" >> /tmp/client.ovpn
-    echo "cert client.crt" >> /tmp/client.ovpn
-    echo "key client.key" >> /tmp/client.ovpn
-    echo "remote 127.0.0.1 11000" >> /tmp/client.ovpn
-    echo "resolv-retry infinite" >> /tmp/client.ovpn
-    echo "dhcp-option DNS 1.1.1.1" >> /tmp/client.ovpn
-    echo "nobind" >> /tmp/client.ovpn
-    echo "${OVPN_COMPRESS}" >> /tmp/client.ovpn
+    echo -n "" > /tmp/openvpn/client.ovpn
+    echo "client" >> /tmp/openvpn/client.ovpn
+    echo "proto tcp" >> /tmp/openvpn/client.ovpn
+    echo "dev ${OVPN_INTERFACE}" >> /tmp/openvpn/client.ovpn
+    echo "ca ca.crt" >> /tmp/openvpn/client.ovpn
+    echo "cert client.crt" >> /tmp/openvpn/client.ovpn
+    echo "key client.key" >> /tmp/openvpn/client.ovpn
+    echo "remote 127.0.0.1 11000" >> /tmp/openvpn/client.ovpn
+    echo "resolv-retry infinite" >> /tmp/openvpn/client.ovpn
+    echo "dhcp-option DNS 1.1.1.1" >> /tmp/openvpn/client.ovpn
+    echo "nobind" >> /tmp/openvpn/client.ovpn
+    echo "${OVPN_COMPRESS}" >> /tmp/openvpn/client.ovpn
 }
 
 ipsecclient_from_server() {
@@ -600,7 +626,6 @@ ipsecclient_from_server() {
     echo "  rightid=@server" >> /tmp/ipsec.conf
     echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
     echo "  auto=add" >> /tmp/ipsec.conf
-
 
 }
 
