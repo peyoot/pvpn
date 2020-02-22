@@ -566,7 +566,7 @@ generate_certs() {
       mkdir -p /var/www/html/openvpn
       cp /tmp/openvpn/* /var/www/html/openvpn/
       echo "For openvpn, please put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
-      rm -rf /tmp/openvpn/* /tmp/pvpn-o*.zip
+      rm -rf /tmp/openvpn /tmp/pvpn-o*.zip
     fi
     if [ strongswan = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
       echo "you have strongswan installed"
@@ -956,6 +956,7 @@ openvpn_install()  {
          wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
          tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
          mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
+         rm -rf /tmp/EasyRSA*.tgz
        fi
     fi
 
