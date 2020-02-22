@@ -566,7 +566,7 @@ generate_certs() {
       mkdir -p /var/www/html/openvpn
       cp /tmp/openvpn/* /var/www/html/openvpn/
       echo "For openvpn, please put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
-      rm -rf /tmp/client.* /tmp/openvpn/* /tmp/pvpn-o*.zip
+      rm -rf /tmp/openvpn/* /tmp/pvpn-o*.zip
     fi
     if [ strongswan = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
       echo "you have strongswan installed"
@@ -574,7 +574,7 @@ generate_certs() {
       cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/strongswan/
       mv /tmp/client.p12 /var/www/html/strongswan/
       mv /tmp/ipsec.conf /var/www/html/strongswan/
-      rm -rf /tmp/pvpn-i*.zip /tmp/client.* /tmp/ipsec.conf
+      rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.conf /tmp/openvpn
     fi
   else
    echo "you need to download your client certs (in /tmp/) for the use in client PC"
@@ -619,7 +619,7 @@ ipsecclient_from_server() {
     echo "  leftid=@client" >> /tmp/ipsec.conf
     echo "  leftcert=clientcert.pem" >> /tmp/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  leftsourceip=%config" >> /etc/ipsec.conf
+      echo "  leftsourceip=%config" >> /tmp/ipsec.conf
     fi
     echo "  leftfirewall=yes" >> /tmp/ipsec.conf
     echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
