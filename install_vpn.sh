@@ -338,16 +338,17 @@ finish_pvpn() {
         echo "tap0 iptables rule exist"
       else
         echo "set iptables rule for openvpn"
-        iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.8.0.0/24 -m conntrack --ctstate NEW -j ACCEPT
+        iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.10.101.0/24 -m conntrack --ctstate NEW -j ACCEPT
         iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-        iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
+        iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.101.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
+
       if [ -n "$VIRTUALIP_RULES" ]; then
         echo "ipsec iptables rule exist"
       else
         echo "set iptables rule for ipsec"
-        iptables -t nat -A POSTROUTING -O ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
+        iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
 
@@ -725,7 +726,7 @@ ovpn_config_file() {
     echo "key /etc/openvpn/server.key" >> $OVPN_CONFIG_SDIR/server.conf
     echo "dh /etc/openvpn/dh.pem" >> $OVPN_CONFIG_SDIR/server.conf
     echo "" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "server 10.8.0.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "server 10.10.101.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
