@@ -536,7 +536,7 @@ generate_certs() {
         sync
         echo "Now also generate a pkcs12 cert for client. "
 #        openssl pkcs12 -export -clcerts -in /tmp/openvpn/client.crt -inkey /tmp/openvpn/client.key -out /tmp/client.p12 -passout pass:
-        zip -j pvpn-openvpn-clientcerts.zip ./client.p12 ./client.ovpn /etc/openvpn/ca.crt ./openvpn/client.crt ./openvpn/client.key
+        zip -j pvpn-openvpn-clientcerts.zip ./client.p12 ./openvpn/client.ovpn /etc/openvpn/ca.crt ./openvpn/client.crt ./openvpn/client.key
       fi
 
 # end of if dualvpn
