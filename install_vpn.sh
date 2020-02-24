@@ -332,7 +332,8 @@ finish_pvpn() {
       echo "your strongswan installation and configuration have been done"
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
-      TAP_RULES=$(iptables  -vL|grep tap0 -m 1 | awk '{print $6}')
+      TAP_RULES=$(iptables -vL|grep tap0 -m 1 | awk '{print $6}')
+      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
       if [ -n "$TAP_RULES" ]; then
         echo "tap0 iptables rule exist"
       else
@@ -342,6 +343,14 @@ finish_pvpn() {
         iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.8.0.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
+      if [ -n "$VIRTUALIP_RULES" ]; then
+        echo "ipsec iptables rule exist"
+      else
+        echo "set iptables rule for ipsec"
+        iptables -t nat -A POSTROUTING -O ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
+        iptables-save > /etc/iptables.rules
+      fi
+
       echo 1 > /proc/sys/net/ipv4/ip_forward
       sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
       ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
