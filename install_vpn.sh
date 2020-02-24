@@ -624,7 +624,11 @@ ipsecclient_from_server() {
     echo "  leftfirewall=yes" >> /tmp/ipsec.conf
     echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
     echo "  rightid=@server" >> /tmp/ipsec.conf
-    echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+    if [ "yes" = "$VIRTUALIP" ]; then
+      echo "  rightsubnet=0.0.0.0/0" >> /tmp/ipsec.conf
+    else
+      echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+    fi
     echo "  auto=add" >> /tmp/ipsec.conf
 
 }
@@ -859,16 +863,18 @@ else
     if [ "yes" = "$VIRTUALIP" ]; then
       echo "  leftsourceip=%config" >> /etc/ipsec.conf
     fi
-
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=@server" >> /etc/ipsec.conf
-
-    RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
-    if [ -z "$RIGHT_SUBNET" ]; then
-      echo "#  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+    if [ "yes" = "$VIRTUALIP" ]; then
+      echo "  rightsubnet=0.0.0.0/0" >> /etc/ipsec.conf
     else
-      echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
+      if [ -z "$RIGHT_SUBNET" ]; then
+        echo "#  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      else
+        echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      fi
     fi
     echo "  auto=add" >> /etc/ipsec.conf
 
