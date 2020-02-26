@@ -322,6 +322,16 @@ finish_pvpn() {
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
     fi
     if [ "openvpn" != "$VPN_TYPE" ]; then
+      if ! grep "dns" /etc/strongswan.conf >/dev/null
+      then
+        PUSH_DNS=yes
+      fi
+      if [ "yes" = "$PUSH_DNS" ]; then
+        echo "add dns in strongswan"
+        sed -i '/load_modular/a\\tdns1=1.1.1.1' /etc/strongswan.conf
+      else
+        echo "strongswan already have dns in config file"
+      fi
       echo "restart ipsec"
       ipsec restart
     else
