@@ -842,6 +842,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
       echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     fi
+    echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
 
