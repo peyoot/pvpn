@@ -380,7 +380,7 @@ finish_pvpn() {
         fi
       else
         echo "Scripts now will try to download from server and extract it into the right place"
-        wget http://${server_url}:8000/pvpn-openvpn-clientcerts.zip
+        wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
         unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
       sleep 1
