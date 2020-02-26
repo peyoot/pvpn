@@ -576,6 +576,7 @@ generate_certs() {
       mkdir -p /var/www/html/strongswan
       cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/strongswan/
       mv /tmp/client.p12 /var/www/html/strongswan/
+      chmod a+r /var/www/html/strongswan/client.p12
       mv /tmp/ipsec.conf /var/www/html/strongswan/
       rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.conf /tmp/openvpn
     fi
