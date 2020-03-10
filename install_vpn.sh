@@ -328,7 +328,7 @@ finish_pvpn() {
       fi
       if [ "yes" = "$PUSH_DNS" ]; then
         echo "add dns in strongswan"
-        sed -i '/load_modular/a\\tdns1=1.1.1.1' /etc/strongswan.conf
+        sed -i '/load_modular/a\\tdns1=9.9.9.9\\n\\tdns149.112.112.112' /etc/strongswan.conf
       else
         echo "strongswan already have dns in config file"
       fi
@@ -603,7 +603,7 @@ ovpnclient_for_win() {
     echo "key client.key" >> /tmp/openvpn/client.ovpn
     echo "remote 127.0.0.1 11000" >> /tmp/openvpn/client.ovpn
     echo "resolv-retry infinite" >> /tmp/openvpn/client.ovpn
-    echo "dhcp-option DNS 1.1.1.1" >> /tmp/openvpn/client.ovpn
+    echo "dhcp-option DNS 9.9.9.9,149.112.112.112" >> /tmp/openvpn/client.ovpn
     echo "nobind" >> /tmp/openvpn/client.ovpn
     echo "${OVPN_COMPRESS}" >> /tmp/openvpn/client.ovpn
 }
@@ -723,7 +723,7 @@ ovpn_config_file() {
     echo "server 10.10.101.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"dhcp-option DNS 9.9.9.9\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
     echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
@@ -843,7 +843,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
       echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
     fi
-    echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
+    echo "  rightdns=9.9.9.9,149.112.112.112" >> /etc/ipsec.conf
     echo "  auto=add" >> /etc/ipsec.conf
 
 
