@@ -724,6 +724,7 @@ ovpn_config_file() {
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"dhcp-option DNS 9.9.9.9\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"dhcp-option DNS 149.112.112.112\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
     echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
