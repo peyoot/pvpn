@@ -156,6 +156,8 @@ check_root() {
 
 prepare_installation_paras() {
 #check out ubuntu version
+apt update
+apt -y install gawk
 UBUNTU_VERSION="$(lsb_release --release | cut -f2)"
 if [ "18.04" = "${UBUNTU_VERSION}" ]; then
       OVPN_CONFIG_SDIR="/etc/openvpn/server"
