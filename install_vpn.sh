@@ -202,7 +202,9 @@ fi
 #set necessary variables
 NEEDPKICA="yes"
 NEEDDH="yes"
-
+ADD_CLIENT="yes"
+CLIENT_USER="client"
+NEED_SCERT="yes"
 
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
@@ -492,7 +494,7 @@ generate_certs() {
       if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
           CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
       else
-          $ADD_CLIENT=no
+          ADD_CLIENT="no"
       fi
     fi
     if [ "yes" = "$ADD_CLIENT" ]; then
@@ -533,7 +535,7 @@ generate_certs() {
       if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
           CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
       else
-          $ADD_CLIENT=no
+          ADD_CLIENT="no"
       fi
     fi
     if [ "yes" = "$ADD_CLIENT" ]; then
@@ -1050,8 +1052,6 @@ openvpn_install()  {
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
 EASYRSA_VERSION="v3.0.6"
-ADD_CLIENT="yes"
-CLIENT_USER="client"
 check_root
 handle_args "$@"
 set_umask
