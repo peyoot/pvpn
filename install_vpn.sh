@@ -205,6 +205,7 @@ NEEDDH="yes"
 ADD_CLIENT="yes"
 CLIENT_USER="client"
 NEED_SCERT="yes"
+MANUALLY_DOWNLOAD="no"
 
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
@@ -346,8 +347,9 @@ finish_pvpn() {
       echo "your strongswan installation and configuration have been done"
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
-      TAP_RULES=$(iptables -vL|grep tap0 -m 1 | awk '{print $6}')
-      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
+      TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
+      echo "TAP_RULES is ${TAP_RULES}"
+#      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
       if [ -n "$TAP_RULES" ]; then
         echo "tap0 iptables rule exist"
       else
@@ -357,7 +359,7 @@ finish_pvpn() {
         iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.101.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
-
+:<<!
       if [ -n "$VIRTUALIP_RULES" ]; then
         echo "ipsec iptables rule exist"
       else
@@ -365,7 +367,7 @@ finish_pvpn() {
         iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
-
+!
       echo 1 > /proc/sys/net/ipv4/ip_forward
       sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
       ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
@@ -375,6 +377,7 @@ finish_pvpn() {
       touch  /etc/rc.local
       echo "#!/bin/bash" >> /etc/rc.local
       echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
+      echo " iptables setup is done"
     fi
   else
     echo "You have set up your vpn client mode with pvpn tools. "
@@ -533,13 +536,12 @@ generate_certs() {
     fi
     if [ -e /etc/ipsec.d/certs/clientcert.pem ]; then
       if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
-          CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
+          echo "Please specify the username of client, use client- as prefix. It will keep original one and generate a new user cert"
       else
           ADD_CLIENT="no"
       fi
     fi
     if [ "yes" = "$ADD_CLIENT" ]; then
-      echo "Now Create client cert,Please input username if you would like to generate specific cert"
       CLIENT_USER=$(prompt "Please input the username of client:" "client")
       ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
       ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
@@ -609,11 +611,13 @@ generate_certs() {
       echo "now in  ${WORK_DIR}"
     else
        echo "Please manually put client ca,key,cert in client PC pki"
+       MANUALLY_DOWNLOAD="yes"
     fi
 
   fi
 # put for downloads
-  if [ -e /etc/webfsd.conf ] ; then
+#  if [ -e /etc/webfsd.conf ] ; then
+  if [ "no" = "$MANUALLY_DOWNLOAS" ]; then
     echo "put in webfs for downloads"
     cp /tmp/pvpn*.zip /var/www/html/
 
