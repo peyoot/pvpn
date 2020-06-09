@@ -456,32 +456,53 @@ generate_certs() {
   echo "now we have CA in place, start to generate certs now!" 
   if [ "openvpn" = "$VPN_TYPE" ] ; then
 #use easyrsa to generate certs
-    ./easyrsa gen-req server nopass
-    sleep 1
-    ./easyrsa sign server server
-    echo "copy server key and cert to config folder"
-    openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12 -passout pass:
-    cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
-    if [ -e /etc/openvpn/dh.pem ] ; then
-        if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
-           echo "use current dh.pem"
-           NEEDDH="no"
+#check if server cert is available or not 
+    if [ -e /etc/openvpn/server.crt ]; then
+      if prompt-yesno "Server cert already exist, generate a new one?" "no" ; then
+        NEED_SCERT="yes"
+      else
+        NEED_SCERT="no"
+      fi
+    fi
+    if [ "yes" = "$NEED_SCERT" ]; then
+        ./easyrsa gen-req server nopass
+        sleep 1
+        ./easyrsa sign server server
+        echo "copy server key and cert to config folder"
+        openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12 -passout pass:
+        cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
+        if [ -e /etc/openvpn/dh.pem ] ; then
+            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+               echo "use current dh.pem"
+               NEEDDH="no"
+            fi
         fi
+        if [ "yes" = "$NEEDDH" ] ; then
+          ./easyrsa gen-dh
+          echo "copy dh to config folder"
+          cp ./pki/dh.pem /etc/openvpn/
+        fi
+        sleep 3
     fi
-    if [ "yes" = "$NEEDDH" ] ; then
-      ./easyrsa gen-dh
-      echo "copy dh to config folder"
-      cp ./pki/dh.pem /etc/openvpn/
+    echo "Scripts will help you generate client certs"
+    echo "By default client.key and client.crt will be generated!."
+    if [ -e ./pki/private/client.crt ]; then
+      if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
+          CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
+      else
+          $ADD_CLIENT=no
+      fi
     fi
-    sleep 3
-    echo "server cert have been generated. Scripts will help you generate a client cert which you can copy to your client PC"
-    echo "you can always generate specific user certs in server's PKI system by yourself later."
-    ./easyrsa gen-req client nopass
-    ./easyrsa sign client client
+    if [ "yes" = "$ADD_CLIENT" ]; then
+        ./easyrsa gen-req ${CLIENT_USER} nopass
+        ./easyrsa sign client ${CLIENT_USER}
+    fi
+
+
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
-      echo "zip ca.crt client.key,client.crt to pvpn-openvpn-clientcerts.zip"
+      echo "zip ca.crt client*.key,client*.crt to pvpn-openvpn-clientcerts.zip"
       mkdir -p /tmp/openvpn
-      cp  ./pki/ca.crt ./pki/private/client.key ./pki/issued/client.crt  /tmp/openvpn/
+      cp  ./pki/ca.crt ./pki/private/client*.key ./pki/issued/client*.crt  /tmp/openvpn/
       ovpnclient_for_win 
       echo "Now also generate pkcs12 cert for client. "
       openssl pkcs12 -export -clcerts -in ./pki/issued/client.crt -inkey ./pki/private/client.key -out /tmp/openvpn/client.p12 -passout pass:
@@ -493,15 +514,33 @@ generate_certs() {
 
   else
 #use ipsec to generte certs
-    ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
-    echo "Server cert has been generated now"
-    echo "check vpn type and copy certs for dualvpn"
- 
-    echo "Now Create client cert,Please input username if you would like to generate specific cert"
-    CLIENT_USER=$(prompt "Please input the username of client:" "client")
-    ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-    ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    if [ -e /etc/ipsec.d/certs/servercert.pem ]; then
+      if prompt-yesno "Server cert already exist, generate a new one?" "no" ; then
+         NEED_SCERT="yes"
+      else
+         NEED_SCERT="no"
+      fi
+    fi
+
+    if [ "yes" = "$NEED_SCERT" ]; then
+        ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
+        ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+        echo "Server cert have been generated"
+    fi
+    if [ -e /etc/ipsec.d/certs/clientcert.pem ]; then
+      if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
+          CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
+      else
+          $ADD_CLIENT=no
+      fi
+    fi
+    if [ "yes" = "$ADD_CLIENT" ]; then
+      echo "Now Create client cert,Please input username if you would like to generate specific cert"
+      CLIENT_USER=$(prompt "Please input the username of client:" "client")
+      ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
+      ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+    fi
+      
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       WORK_DIR=$(pwd)
       cd /etc/ipsec.d/private
@@ -512,7 +551,6 @@ generate_certs() {
       cp /etc/ipsec.d/cacerts/cacert.pem /tmp/ipsec.d/cacerts/
       cd /etc/ipsec.d/certs/
       ls|grep -v servercert.pem|xargs -i cp -rp {} /tmp/ipsec.d/certs/
-
       echo "pack ipsec pki client certs"
       cd /tmp
       echo "VIRTUALIP is  ${VIRTUALIP}"
@@ -520,24 +558,36 @@ generate_certs() {
       sync
       openssl pkcs12 -export -clcerts -in ./ipsec.d/certs/clientcert.pem -inkey ./ipsec.d/private/clientkey.pem -out ./client.p12 -passout pass: 
       zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/* ./ipsec.conf
+
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
-        echo "Copy to openvpn config file"
-        cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
-        cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
-        cp /etc/ipsec.d/cacerts/cacert.pem /etc/openvpn/ca.crt
-        openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/servercert.pem -inkey /etc/ipsec.d/private/serverkey.pem -out /etc/stunnel/server.p12 -passout pass:
-        if [ -e /etc/openvpn/dh.pem ]; then
-            if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
-               echo "use current dh.pem"
-               NEEDDH="no"
-            fi
+#check if server cert exist
+        if [ -e /etc/openvpn/server.crt ]; then
+          if prompt-yesno "Server cert already exist, generate a new one?" "no" ; then
+            NEED_SCERT="yes"
+          else
+            NEED_SCERT="no"
+          fi
         fi
-        if [ "yes" = "$NEEDDH" ] ; then
-          openssl dhparam -out dh.pem 2048   
-          mv dh.pem /etc/openvpn/
-        fi
+        if [ "yes" = "$NEED_SCERT" ]; then
 
+
+          echo "Copy to openvpn config file"
+          cp /etc/ipsec.d/private/serverkey.pem /etc/openvpn/server.key
+          cp /etc/ipsec.d/certs/servercert.pem /etc/openvpn/server.crt
+          cp /etc/ipsec.d/cacerts/cacert.pem /etc/openvpn/ca.crt
+          openssl pkcs12 -export -clcerts -in /etc/ipsec.d/certs/servercert.pem -inkey /etc/ipsec.d/private/serverkey.pem -out /etc/stunnel/server.p12 -passout pass:
+          if [ -e /etc/openvpn/dh.pem ]; then
+              if prompt-yesno "you've got dh.pem in PKI, use it?" "yes" ; then
+                 echo "use current dh.pem"
+                 NEEDDH="no"
+              fi
+          fi
+          if [ "yes" = "$NEEDDH" ] ; then
+            openssl dhparam -out dh.pem 2048   
+            mv dh.pem /etc/openvpn/
+          fi
+        fi
         mkdir -p /tmp/openvpn
         echo "Copy client cert to openvpn temp config folder"
         mv /tmp/ipsec.d/certs/clientcert.pem /tmp/openvpn/client.crt
@@ -998,6 +1048,8 @@ openvpn_install()  {
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
 EASYRSA_VERSION="v3.0.6"
+ADD_CLIENT="yes"
+CLIENT_USER="client"
 check_root
 handle_args "$@"
 set_umask
