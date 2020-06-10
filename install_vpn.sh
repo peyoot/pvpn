@@ -915,7 +915,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     else
 #client user is new one , add this part into server ipsec config file
 #      IS_OLDUSER=
-      if cat /etc/ipsec.conf |grep "${CLIENT_USER}">/dev/null
+      if cat /etc/ipsec.conf |grep "${CLIENT_USER}">/dev/null ; then
         echo "This user is already configured"
       else
         echo "conn ${CLIENT_USER}" >> /etc/ipsec.conf
