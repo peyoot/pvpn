@@ -886,30 +886,38 @@ ipsec_config_file() {
 #configure ipsec herek
 if [ "server" = "$VPN_MODE" ] ; then
     echo "start to configure ipsec server side"
-    echo -n "" > /etc/ipsec.conf
-    echo "config setup" >> /etc/ipsec.conf
-    echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
-    echo "  # uniquyeids=no" >> /etc/ipsec.conf
-    echo "conn %default" >> /etc/ipsec.conf
-    echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-    echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
+#client user is default
+    if [ "client" = "$CLIENT_USER" ]; then
+      echo -n "" > /etc/ipsec.conf
+      echo "config setup" >> /etc/ipsec.conf
+      echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
+      echo "  # uniquyeids=no" >> /etc/ipsec.conf
+      echo "conn %default" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
 
-    echo "conn nat-t" >> /etc/ipsec.conf
-    echo "  left=%defaultroute" >> /etc/ipsec.conf
-    echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
-    echo "  leftid=@server" >> /etc/ipsec.conf
-    echo "  # leftfirewall=yes" >> /etc/ipsec.conf
-    echo "  right=%any" >> /etc/ipsec.conf
-    if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsourceip=10.10.100.0/24" >> /etc/ipsec.conf
+#      echo "conn nat-t" >> /etc/ipsec.conf
+      echo "  left=%defaultroute" >> /etc/ipsec.conf
+      echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
+      echo "  leftid=@server" >> /etc/ipsec.conf
+      echo "  # leftfirewall=yes" >> /etc/ipsec.conf
+
+      echo "conn nat-t" >> /etc/ipsec.conf
+      echo "  right=%any" >> /etc/ipsec.conf
+      if [ "yes" = "$VIRTUALIP" ]; then
+        echo "  rightsourceip=10.10.100.0/24" >> /etc/ipsec.conf
+      else
+        RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+        echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      fi
+      echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
+      echo "  auto=add" >> /etc/ipsec.conf
     else
-      RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-      echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+#client user is new one , add this part into server ipsec config file
+      echo "conn ${CLIENT_USER}" >> /etc/ipsec.conf
+      echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
+      echo "  auto=add" >> /etc/ipsec.conf
     fi
-    echo "  rightdns=9.9.9.9,149.112.112.112" >> /etc/ipsec.conf
-    echo "  auto=add" >> /etc/ipsec.conf
-
-
     echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
