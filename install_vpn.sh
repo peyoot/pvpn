@@ -348,7 +348,7 @@ finish_pvpn() {
     else
       NETINTERFACE=$(ip route | grep default | awk '{print $5}')
       TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
-      echo "TAP_RULES is ${TAP_RULES}"
+#      echo "TAP_RULES is ${TAP_RULES}"
 #      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
       if [ -n "$TAP_RULES" ]; then
         echo "tap0 iptables rule exist"
@@ -377,10 +377,10 @@ finish_pvpn() {
       touch  /etc/rc.local
       echo "#!/bin/bash" >> /etc/rc.local
       echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
-      echo " iptables setup is done"
+      echo "iptables setup is done"
     fi
   else
-    echo "You have set up your vpn client mode with pvpn tools. "
+    echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
       if [ "openvpn" != "$VPN_TYPE" ]; then
         echo "Scripts now try to download ipsec client certs and config from server"
@@ -522,7 +522,7 @@ generate_certs() {
   else
 #use ipsec to generte certs
     if [ -e /etc/ipsec.d/certs/servercert.pem ]; then
-      if prompt-yesno "Server cert already exist, generate a new one?" "no" ; then
+      if prompt-yesno "Strongswan server cert already exist, generate a new one?" "no" ; then
          NEED_SCERT="yes"
       else
          NEED_SCERT="no"
@@ -569,7 +569,7 @@ generate_certs() {
       if [ "dualvpn" = "$VPN_TYPE" ]; then
 #check if server cert exist
         if [ -e /etc/openvpn/server.crt ]; then
-          if prompt-yesno "Server cert already exist, generate a new one?" "no" ; then
+          if prompt-yesno "Openvpn server cert already exist, generate a new one?" "no" ; then
             NEED_SCERT="yes"
           else
             NEED_SCERT="no"
@@ -617,7 +617,7 @@ generate_certs() {
   fi
 # put for downloads
 #  if [ -e /etc/webfsd.conf ] ; then
-  if [ "no" = "$MANUALLY_DOWNLOAS" ]; then
+  if [ "no" = "$MANUALLY_DOWNLOAD" ]; then
     echo "put in webfs for downloads"
     cp /tmp/pvpn*.zip /var/www/html/
 
