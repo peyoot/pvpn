@@ -544,7 +544,7 @@ generate_certs() {
     if [ "yes" = "$ADD_CLIENT" ]; then
       CLIENT_USER=$(prompt "Please input the username of client:" "client")
       ipsec pki --gen --outform pem > /etc/ipsec.d/private/${CLIENT_USER}key.pem
-      ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=client" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
+      ipsec pki --pub --in /etc/ipsec.d/private/${CLIENT_USER}key.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=${CLIENT_USER}" --san client --outform pem > /etc/ipsec.d/certs/${CLIENT_USER}cert.pem
     fi
       
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
