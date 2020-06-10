@@ -562,8 +562,8 @@ generate_certs() {
       echo "VIRTUALIP is  ${VIRTUALIP}"
       ipsecclient_from_server
       sync
-      openssl pkcs12 -export -clcerts -in ./ipsec.d/certs/clientcert.pem -inkey ./ipsec.d/private/clientkey.pem -out ./client.p12 -passout pass: 
-      zip -r pvpn-ipsec-clientcerts.zip ./ipsec.d/* ./ipsec.conf
+      openssl pkcs12 -export -clcerts -in ./ipsec.d/certs/${CLIENT_USER}cert.pem -inkey ./ipsec.d/private/${CLIENT_USER}key.pem -out ./${CLIENT_USER}.p12 -passout pass: 
+      zip -r pvpn-ipsec-${CLIENT_USER}certs.zip ./ipsec.d/private/${CLIENT_USER}key.pem ./ipsec.d/certs/${CLIENT_USER}cert.pem ./ipsec.d/cacerts/cacert.pem ./ipsec.conf ./ipsec.secrets
 
 #if it's dualvpn
       if [ "dualvpn" = "$VPN_TYPE" ]; then
@@ -633,10 +633,11 @@ generate_certs() {
       echo "you have strongswan installed"
       mkdir -p /var/www/html/strongswan
       cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/strongswan/
-      mv /tmp/client.p12 /var/www/html/strongswan/
-      chmod a+r /var/www/html/strongswan/client.p12
+      mv /tmp/${CLIENT_USER}.p12 /var/www/html/strongswan/
+      chmod a+r /var/www/html/strongswan/${CLIENT_USER}.p12
       mv /tmp/ipsec.conf /var/www/html/strongswan/
-      rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.conf /tmp/openvpn
+      mv /tmp/ipsec.secrets /var/www/html/strongswan/
+      rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.* /tmp/openvpn
     fi
   else
    echo "you need to download your client certs (in /tmp/) for the use in client PC"
@@ -678,8 +679,8 @@ ipsecclient_from_server() {
 
     echo "conn nat-t" >> /tmp/ipsec.conf
     echo "  left=%defaultroute" >> /tmp/ipsec.conf
-    echo "  leftid=@client" >> /tmp/ipsec.conf
-    echo "  leftcert=clientcert.pem" >> /tmp/ipsec.conf
+    echo "  leftid=@${CLIENT_USER}" >> /tmp/ipsec.conf
+    echo "  leftcert=${CLIENT_USER}cert.pem" >> /tmp/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
       echo "  leftsourceip=%config" >> /tmp/ipsec.conf
     fi
@@ -692,6 +693,9 @@ ipsecclient_from_server() {
       echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
     fi
     echo "  auto=add" >> /tmp/ipsec.conf
+    echo -n "" > /tmp/ipsec.secrets
+    echo ": RSA ${CLIENT_USER}key.pem" >> /tmp/ipsec.secrets
+
 
 }
 
