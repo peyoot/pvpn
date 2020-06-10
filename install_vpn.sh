@@ -333,7 +333,7 @@ finish_pvpn() {
       fi
       if [ "yes" = "$PUSH_DNS" ]; then
         echo "add dns in strongswan"
-        sed -i '/load_modular/a\\tdns1=9.9.9.9\\n\\tdns149.112.112.112' /etc/strongswan.conf
+        sed -i '/load_modular/a\\tdns=1.1.1.1' /etc/strongswan.conf
       else
         echo "strongswan already have dns in config file"
       fi
@@ -384,11 +384,11 @@ finish_pvpn() {
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
       if [ "openvpn" != "$VPN_TYPE" ]; then
         echo "Scripts now try to download ipsec client certs and config from server"
-        wget http://${SERVER_URL}:8000/pvpn-ipsec-clientcerts.zip
+        wget http://${SERVER_URL}:8000/pvpn-ipsec-${CLIENT_USER}certs.zip
         if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "yes" ; then
-          unzip -o pvpn-ipsec-clientcerts.zip -d /etc/
+          unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
         else
-          unzip -o pvpn-ipsec-clientcerts.zip -d /etc/ -x ipsec.conf
+          unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
         fi
 
         if [ "dualvpn" = "$VPN_TYPE" ]; then
@@ -924,6 +924,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo "ipsec configuration is ready to work now,please remember to open server's 500,4500 port and run ipsec restart before you can set up ipsec tunnel"
 
 else
+    CLIENT_USER=$(prompt "Please input the client username:" "client")
     echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
@@ -934,8 +935,8 @@ else
     echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
     echo "conn nat-t" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
-    echo "  leftid=@client" >> /etc/ipsec.conf
-    echo "  leftcert=clientcert.pem" >> /etc/ipsec.conf
+    echo "  leftid=@${CLIENT_USER}" >> /etc/ipsec.conf
+    echo "  leftcert=${CLIENT_USER}cert.pem" >> /etc/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
       echo "  leftsourceip=%config" >> /etc/ipsec.conf
     fi
@@ -956,7 +957,7 @@ else
 
     echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
-    echo ": RSA clientkey.pem" >> /etc/ipsec.secrets
+    echo ": RSA ${CLIENT_USER}key.pem" >> /etc/ipsec.secrets
 
     echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up nat-t"
     echo "Please download http://$SERVER_URL:8000/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
