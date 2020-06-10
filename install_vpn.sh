@@ -914,9 +914,14 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  auto=add" >> /etc/ipsec.conf
     else
 #client user is new one , add this part into server ipsec config file
-      echo "conn ${CLIENT_USER}" >> /etc/ipsec.conf
-      echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
-      echo "  auto=add" >> /etc/ipsec.conf
+#      IS_OLDUSER=
+      if cat /etc/ipsec.conf |grep "${CLIENT_USER}">/dev/null
+        echo "This user is already configured"
+      else
+        echo "conn ${CLIENT_USER}" >> /etc/ipsec.conf
+        echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
+        echo "  auto=add" >> /etc/ipsec.conf
+      fi
     fi
     echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
