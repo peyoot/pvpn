@@ -686,7 +686,7 @@ ipsecclient_from_server() {
     echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
     echo "  rightid=@server" >> /tmp/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsubnet=0.0.0.0/0" >> /tmp/ipsec.conf
+      echo "  rightsubnet=10.100.0.0/16" >> /tmp/ipsec.conf
     else
       echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
     fi
@@ -947,7 +947,7 @@ else
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=@server" >> /etc/ipsec.conf
     if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsubnet=0.0.0.0/0" >> /etc/ipsec.conf
+      echo "  rightsubnet=10.100.0.0/16" >> /etc/ipsec.conf
     else
       RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
       if [ -z "$RIGHT_SUBNET" ]; then
