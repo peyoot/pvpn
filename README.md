@@ -5,11 +5,6 @@ This scripts help user to set up and configure VPN. It support: openvpn and stro
 For openvpn it will use stunnel4 to hide the VPN tunnel into ssl so that it won't be block by GFW
 For strongswan, it help you configure server mode (with public IP) and client mode (initial connector). 
 
-PVPN scripts is originally designed to simplify the palfort vpn set up and configuration process. Now you can take advantage of it to set up your own VPN network.
-Palfort is an internet organization that aimed to gather people in the world to co-work together and build all necessary software and platform that you may need in "Internet Age". 
-
-We believe as user and also as maker. We set up code and rules and also provide platforms, to prevent our future from kidnaped by internet gients like Google,Facebook,Amazon
-You're welcome to join Palfort. More information please feel free to send an email to peyoot#hotmail.com
 
 How to set up VPN
 ----
@@ -20,24 +15,30 @@ Scripts have been tested with Ubuntu 18.04. Other version of Ubuuntu or Debian m
 You simply need to run the same script in server or client PC. <br>
 sudo ./install_vpn.sh <br>
 
-And then follow the instruction to select server/client mode and VPN type. Most of the time you only need to press "Enter" key follow the prompts. 
-But you'll need to input "yes" in the server/client certs generation process.
-Also when you install client mode. You'll need to input server's IP so that the scripts know how to set up configure files for you.
+And then follow the instruction to select server/client mode and VPN type. You'll need to input public IP of VPN server. Most of the rest you only need to press "Enter" key follow the prompts. But you'll need to input "yes" in the server/client certs generation process if you choose install openvpn solo. 
+
 
 PVPN scripts will help you generated every thing serer needed and also generated a client certification for the use in home or office PC/laptop. You can download client certs directly from server via web browser.
-All necessary certs,config files,scripts in Ubuntu server/client will be generated automatically.
-If you use it in Windows/Mac/Android, you'll need to install openvpn/stunnel manually and put certs/config by yourselves. 
+All necessary certs,config files,scripts in Ubuntu server/client will be generated in server and download & extract in client automatically.
 
-Change log:
-----
-2016  pvpn_init finished. it support both openvpn over stunnel4 , and strongswan, but use seperate PKI CA. 
+Firewall:
+Following ports need to be available in VPN server for scripts to function as expected:
 
-2019 add install_vpn.sh It use openvpn and EASYRSA3. The goal is to use same PKI certs for both openvpn and strongswan<br>
-20191108  Openvpn over stunnel4 pass test.
+TCP 8000  :  webfs port for downloading certs and configuration automatically.
+TCP 8443  :  openvpn over stunnel, this is the port that stunnel4 service listen on
+UDP 500,4500:  These two used by ipsec VPN. 
 
+Scripts currently only support ubuntu 16.04 or 18.04
+After installation, to start the vpn in client PC:
+For openvpn in ubuntu 18.04:  sudo systemctl start openvpn-client@client
+For strongswan ipsec: ipsec up nat-t
 
 To do list:
 ----
 
-Strongstrong auto install/config
-openvpn use strongswan CA,certs
+PVPN scripts is originally designed to simplify the palfort vpn set up and configuration process. Now you can take advantage of it to set up your own VPN network.
+Palfort is an internet organization that aimed to gather people in the world to co-work together and build all necessary software and platform that you may need in "Internet Age". 
+
+We believe as user and also as maker. We set up code and rules and also provide platforms, to prevent our future from kidnaped by internet gients like Google,Facebook,Amazon
+You're welcome to join Palfort. More information please feel free to send an email to peyoot#hotmail.com
+
