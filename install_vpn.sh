@@ -326,7 +326,9 @@ finish_pvpn() {
       systemctl stop webfs |at now + 24 hours
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
     fi
+    NETINTERFACE=$(ip route | grep default | awk '{print $5}')
     if [ "openvpn" != "$VPN_TYPE" ]; then
+#do ipsec finishing stuff here
       if ! grep "dns" /etc/strongswan.conf >/dev/null
       then
         PUSH_DNS=yes
@@ -338,15 +340,23 @@ finish_pvpn() {
         echo "strongswan already have dns in config file"
       fi
       echo "restart ipsec"
+# set iptables for ipsec
+      IPSEC_RULES=$(iptables -nL|grep  10.10.100.0 -m -1 | awk '{print $5}')
+      if [ -n "$IPSEC_RULES" ]; then
+          echo "ipsec iptables rule exist"
+      else
+          echo "set iptables rule for ipsec"
+          iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
+          iptables-save > /etc/iptables.rules
+      fi
+
+      echo "restart  ipsec "
       ipsec restart
-    else
-      systemctl restart openvpn-server@server
     fi
     echo "Now set iptables to finish the pvpn install"
-    if [ "strongswan" = "$VPN_TYPE" ]; then
-      echo "your strongswan installation and configuration have been done"
-    else
-      NETINTERFACE=$(ip route | grep default | awk '{print $5}')
+    if [ "strongswan" != "$VPN_TYPE" ]; then
+#do ovpn finishing stuff here
+#      NETINTERFACE=$(ip route | grep default | awk '{print $5}')
       TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
 #      echo "TAP_RULES is ${TAP_RULES}"
 #      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
@@ -359,26 +369,17 @@ finish_pvpn() {
         iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.101.0/24 -j MASQUERADE
         iptables-save > /etc/iptables.rules
       fi
-:<<!
-      if [ -n "$VIRTUALIP_RULES" ]; then
-        echo "ipsec iptables rule exist"
-      else
-        echo "set iptables rule for ipsec"
-        iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.10.100.0/24 -j MASQUERADE
-        iptables-save > /etc/iptables.rules
-      fi
-!
-      echo 1 > /proc/sys/net/ipv4/ip_forward
-      sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-      ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-      echo "[Install]" >> /etc/systemd/system/rc-local.service
-      echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
-      echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
-      touch  /etc/rc.local
-      echo "#!/bin/bash" >> /etc/rc.local
-      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
-      echo "iptables setup is done"
     fi
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+    sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+    ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+    echo "[Install]" >> /etc/systemd/system/rc-local.service
+    echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
+    echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
+    touch  /etc/rc.local
+    echo "#!/bin/bash" >> /etc/rc.local
+    echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
+    echo "iptables setup is done"
   else
     echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
@@ -391,12 +392,9 @@ finish_pvpn() {
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
         fi
 
-        if [ "dualvpn" = "$VPN_TYPE" ]; then
-          wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
-          unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
-        fi
-      else
-        echo "Scripts now will try to download from server and extract it into the right place"
+      fi
+      if [ "ipsec" != "$VPN_TYPE" ]; then
+        echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
         wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
         unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
@@ -785,8 +783,8 @@ ovpn_config_file() {
     echo "server 10.10.101.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
     echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 9.9.9.9\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 149.112.112.112\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
+    echo "push \"dhcp-option DNS 8.8.8.8\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
     echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
     echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
