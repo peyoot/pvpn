@@ -344,10 +344,22 @@ finish_pvpn() {
       IPSEC_RULES=$(iptables -nL|grep  10.100.100.0 -m -1 | awk '{print $5}')
       if [ -n "$IPSEC_RULES" ]; then
           echo "ipsec iptables rule exist"
+        if prompt-yesno "would you like to remove iptables" "no" ; then
+           echo "removing ipsec iptables rules"
+           iptables -t nat -D POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
+           iptables-save > /etc/iptables.rules
+        else
+           echo "keep ipsec itable rules"
+        fi
       else
-          echo "set iptables rule for ipsec"
-          iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
-          iptables-save > /etc/iptables.rules
+        echo "choose to set iptables rule for ipsec"
+        if prompt-yesno "would you like to set ipsec iptables rules so that client may use tunnel to access internet" "yes" ; then
+           echo "set ipsec iptables rules"
+           iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
+           iptables-save > /etc/iptables.rules
+        else
+           echo "keep ipsec iptables rules untapped"
+        fi
       fi
 
       echo "restart  ipsec "
