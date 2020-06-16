@@ -206,6 +206,7 @@ ADD_CLIENT="yes"
 CLIENT_USER="client"
 NEED_SCERT="yes"
 MANUALLY_DOWNLOAD="no"
+KEEP_IPSEC_CONFIG="no"
 
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
