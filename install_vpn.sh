@@ -882,9 +882,19 @@ ovpn_config_file() {
 
 ipsec_config_file() {
 #configure ipsec herek
+
 if [ "server" = "$VPN_MODE" ] ; then
+  if [ -e /etc/ipsec.conf ]; then
+    if prompt-yesno "ipsec.conf already exist, would you like to keep it?" "no" ; then
+      echo "You chose to keep original ipsec configure in server
+      KEEP_IPSEC_CONFIG="yes"
+    else
+      KEEP_IPSEC_CONFIG="no"
+    fi
+  fi
+  if [ "no" = "$KEEP_IPSEC_CONFIG" ]; then
     echo "start to configure ipsec server side"
-#client user is default
+    #client user is default
     if [ "client" = "$CLIENT_USER" ]; then
       echo -n "" > /etc/ipsec.conf
       echo "config setup" >> /etc/ipsec.conf
@@ -893,8 +903,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "conn %default" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
       echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
-
-#      echo "conn nat-t" >> /etc/ipsec.conf
+      # echo "conn nat-t" >> /etc/ipsec.conf
       echo "  left=%defaultroute" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
       echo "  leftid=@server" >> /etc/ipsec.conf
@@ -906,12 +915,12 @@ if [ "server" = "$VPN_MODE" ] ; then
         echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       else
         RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
-        echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
       fi
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
       echo "  auto=add" >> /etc/ipsec.conf
     else
-#client user is new one , add this part into server ipsec config file
+    #client user is new one , add this part into server ipsec config file
 #      IS_OLDUSER=
       if cat /etc/ipsec.conf |grep "${CLIENT_USER}">/dev/null ; then
         echo "This user is already configured"
@@ -925,7 +934,7 @@ if [ "server" = "$VPN_MODE" ] ; then
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
     echo "ipsec configuration is ready to work now,please remember to open server's 500,4500 port and run ipsec restart before you can set up ipsec tunnel"
-
+  fi
 else
     CLIENT_USER=$(prompt "Please input the client username:" "client")
     echo "start to configure ipsec client side"
@@ -957,11 +966,9 @@ else
       fi
     fi
     echo "  auto=add" >> /etc/ipsec.conf
-
     echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA ${CLIENT_USER}key.pem" >> /etc/ipsec.secrets
-
     echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up nat-t"
     echo "Please download http://$SERVER_URL:8000/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
     echo "To extract to the right place: sudo unzip pvpn-ipsec-clientcerts.zip -d /etc/"
