@@ -899,18 +899,27 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo -n "" > /etc/ipsec.conf
       echo "config setup" >> /etc/ipsec.conf
       echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
-      echo "  # uniquyeids=no" >> /etc/ipsec.conf
+      echo "  uniquyeids=never" >> /etc/ipsec.conf
       echo "conn %default" >> /etc/ipsec.conf
-      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
-      # echo "conn nat-t" >> /etc/ipsec.conf
-      echo "  left=%defaultroute" >> /etc/ipsec.conf
+      echo "  left=%any" >> /etc/ipsec.conf
+      echo "  #  leftsubnet=0.0.0.0/0" >> /etc/ipsec.conf
+      echo "  right=%any" >> /etc/ipsec.conf
+      echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
       echo "  leftid=@server" >> /etc/ipsec.conf
       echo "  # leftfirewall=yes" >> /etc/ipsec.conf
-
-      echo "conn nat-t" >> /etc/ipsec.conf
-      echo "  right=%any" >> /etc/ipsec.conf
+      echo "  # some android use ikev1 and xauth psk" >> /etc/ipsec.conf
+      echo "conn ikev1_psk_xauth" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev1" >> /etc/ipsec.conf
+      echo "  leftauth=psk" >> /etc/ipsec.conf
+      echo "  rightauth=psk" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "# windows,linux,ikev2,cert" >> /etc/ipsec.conf
+      echo "conn ikev2_cert" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "  rightauth=pubkey" >> /etc/ipsec.conf
+      echo "  rightid=@client" >> /etc/ipsec.conf
       if [ "yes" = "$VIRTUALIP" ]; then
         echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       else
@@ -919,20 +928,48 @@ if [ "server" = "$VPN_MODE" ] ; then
       fi
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
       echo "  auto=add" >> /etc/ipsec.conf
+      echo "# windows,IOS 9+, EAP" >> /etc/ipsec.conf
+      echo "conn ikev2_cert" >> /etc/ipsec.conf
+      echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
+      echo "  rekey=no" >> /etc/ipsec.conf
+      echo "  leftauth=pubkey" >> /etc/ipsec.conf
+      echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
+      echo "  leftsendcert=always" >> /etc/ipsec.conf
+      echo "  righauth=eap-mschapv2" >> /etc/ipsec.conf
+      echo "  rightsendcert=never" >> /etc/ipsec.conf
+      echo "  eap_identity=%any" >> /etc/ipsec.conf
+      echo "  fragmentation=yes" >> /etc/ipsec.conf
+      echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
+      echo "  auto=add" >> /etc/ipsec.conf
     else
     #client user is new one , add this part into server ipsec config file
-#      IS_OLDUSER=
       if cat /etc/ipsec.conf |grep "${CLIENT_USER}">/dev/null ; then
         echo "This user is already configured"
       else
-        echo "conn ${CLIENT_USER}" >> /etc/ipsec.conf
+        echo "# additional client ikev2 cert support" >> /etc/ipsec.conf   
+        echo "conn ikev2_cert_${CLIENT_USER}" >> /etc/ipsec.conf
+        echo "  keyexchange=ikev2" >> /etc/ipsec.conf
+        echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
         echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
+        if [ "yes" = "$VIRTUALIP" ]; then
+          echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
+        else
+          RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+        echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+        fi
+        echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
         echo "  auto=add" >> /etc/ipsec.conf
+ 
       fi
     fi
     echo "now configuring vpn authentication method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA serverkey.pem " >> /etc/ipsec.secrets
+    echo ": PSK \"pvpnpassword\"" >> /etc/ipsec.secrets
+    echo "robin %any : XAUTH \"pvpnpassword\"" >> /etc/ipsec.secrets
+    echo "robin %any : EAP \"pvpnpassword\"" >> /etc/ipsec.secrets
     echo "ipsec configuration is ready to work now,please remember to open server's 500,4500 port and run ipsec restart before you can set up ipsec tunnel"
   fi
 else
