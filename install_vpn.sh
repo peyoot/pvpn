@@ -389,7 +389,7 @@ finish_pvpn() {
     touch  /etc/rc.local
     echo "#!/bin/bash" >> /etc/rc.local
     echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
-    echo "iptables setup is done"
+    echo "service to restore iptables rules after reboot is set"
   else
     echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
