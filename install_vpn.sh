@@ -156,8 +156,6 @@ check_root() {
 
 prepare_installation_paras() {
 #check out ubuntu version
-apt update
-apt -y install gawk
 UBUNTU_VERSION="$(lsb_release --release | cut -f2)"
 if [ "18.04" = "${UBUNTU_VERSION}" ]; then
       OVPN_CONFIG_SDIR="/etc/openvpn/server"
@@ -273,6 +271,7 @@ confirm_install() {
   echo "prepare some software packages for scripts to use"
   echo "apt update" | tee -a /var/log/pvpn_install.log 
   apt update
+  apt -y install gawk
   if [ ! -e /usr/bin/zip ]; then
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
@@ -342,7 +341,7 @@ finish_pvpn() {
       fi
       echo "restart ipsec"
 # set iptables for ipsec
-      IPSEC_RULES=$(iptables -nL|grep  10.100.100.0 -m -1 | awk '{print $5}')
+      IPSEC_RULES=$(iptables -nL -t nat|grep  10.100.100.0 -m -1 | awk '{print $4}')
       if [ -n "$IPSEC_RULES" ]; then
           echo "ipsec iptables rule exist"
         if prompt-yesno "would you like to remove iptables" "no" ; then
@@ -366,10 +365,8 @@ finish_pvpn() {
       echo "restart  ipsec "
       ipsec restart
     fi
-    echo "Now set iptables to finish the pvpn install"
     if [ "strongswan" != "$VPN_TYPE" ]; then
 #do ovpn finishing stuff here
-#      NETINTERFACE=$(ip route | grep default | awk '{print $5}')
       TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
 #      echo "TAP_RULES is ${TAP_RULES}"
 #      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
@@ -899,7 +896,7 @@ ipsec_config_file() {
 if [ "server" = "$VPN_MODE" ] ; then
   if [ -e /etc/ipsec.conf ]; then
     if prompt-yesno "ipsec.conf already exist, would you like to keep it?" "no" ; then
-      echo "You chose to keep original ipsec configure in server
+      echo "You chose to keep original ipsec configure in server"
       KEEP_IPSEC_CONFIG="yes"
     else
       KEEP_IPSEC_CONFIG="no"
@@ -912,7 +909,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo -n "" > /etc/ipsec.conf
       echo "config setup" >> /etc/ipsec.conf
       echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
-      echo "  uniquyeids=never" >> /etc/ipsec.conf
+      echo "  uniqueids=never" >> /etc/ipsec.conf
       echo "conn %default" >> /etc/ipsec.conf
       echo "  left=%any" >> /etc/ipsec.conf
       echo "  #  leftsubnet=0.0.0.0/0" >> /etc/ipsec.conf
@@ -950,7 +947,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  leftauth=pubkey" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
       echo "  leftsendcert=always" >> /etc/ipsec.conf
-      echo "  righauth=eap-mschapv2" >> /etc/ipsec.conf
+      echo "  rightauth=eap-mschapv2" >> /etc/ipsec.conf
       echo "  rightsendcert=never" >> /etc/ipsec.conf
       echo "  eap_identity=%any" >> /etc/ipsec.conf
       echo "  fragmentation=yes" >> /etc/ipsec.conf
