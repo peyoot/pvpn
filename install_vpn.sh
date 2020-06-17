@@ -928,8 +928,10 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "conn ikev2_cert" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "  leftsubnet=10.100.0.0/16" >> /etc/ipsec.conf
       echo "  rightauth=pubkey" >> /etc/ipsec.conf
       echo "  rightid=@client" >> /etc/ipsec.conf
+      echo "  rightcert=clientcert.pem" >> /etc/ipsec.conf
       if [ "yes" = "$VIRTUALIP" ]; then
         echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       else
@@ -939,7 +941,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
       echo "  auto=add" >> /etc/ipsec.conf
       echo "# windows,IOS 9+, EAP" >> /etc/ipsec.conf
-      echo "conn ikev2_cert" >> /etc/ipsec.conf
+      echo "conn ikev2_eap" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
       echo "  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
@@ -988,7 +990,7 @@ else
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
     echo "  # strictcrlpolicy=yes" >> /etc/ipsec.conf
-    echo "  # uniquyeids=no" >> /etc/ipsec.conf
+    echo "  # uniqueids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
     echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
