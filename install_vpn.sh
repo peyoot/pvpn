@@ -361,6 +361,14 @@ finish_pvpn() {
            echo "keep ipsec iptables rules untapped"
         fi
       fi
+      NO_SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
+      if [ -n "$NO_SERVER_VIRTUALIP"]; then
+        if [ "yes" = "$VIRTUALIP" ]; then
+          if "yes" = "$NO_SERVER_VIRTUALIP"];then
+            ip addr add 10.100.100.254/24 dev 
+          fi
+        fi
+      fi
 
       echo "restart  ipsec "
       ipsec restart
@@ -396,12 +404,11 @@ finish_pvpn() {
       if [ "openvpn" != "$VPN_TYPE" ]; then
         echo "Scripts now try to download ipsec client certs and config from server"
         wget http://${SERVER_URL}:8000/pvpn-ipsec-${CLIENT_USER}certs.zip
-        if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "yes" ; then
+        if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
         else
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
         fi
-
       fi
       if [ "ipsec" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
@@ -695,10 +702,14 @@ ipsecclient_from_server() {
     echo "  leftfirewall=yes" >> /tmp/ipsec.conf
     echo "  right=${SERVER_URL}" >> /tmp/ipsec.conf
     echo "  rightid=@server" >> /tmp/ipsec.conf
-    if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsubnet=10.100.0.0/16" >> /tmp/ipsec.conf
+    if [ "yes" = "$VPN_INTERNET" ]; then
+      echo "  rightsubnet=0.0.0.0/0" >> /tmp/ipsec.conf
     else
-      echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+      if [ "yes" = "$VIRTUALIP" ]; then
+        echo "  rightsubnet=10.100.0.0/16" >> /tmp/ipsec.conf
+      else
+        echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+      fi
     fi
     echo "  auto=add" >> /tmp/ipsec.conf
     echo -n "" > /tmp/ipsec.secrets
@@ -710,8 +721,7 @@ ipsecclient_from_server() {
 
 
 ipsec_config() {
-  if [ "server" = "$VPN_MODE" ]; then
-
+ if [ "server" = "$VPN_MODE" ]; then
     echo "you'll use ipsec pki"
     if [ -e /etc/ipsec.d/cacerts/cacert.pem ]; then
       if [ -e /etc/ipsec.d/private/cakey.pem ]; then
@@ -892,6 +902,11 @@ ovpn_config_file() {
 
 ipsec_config_file() {
 #configure ipsec herek
+if prompt-yesno "Would you like to tunnel all  trafic to VPN server" "no" ; then
+    VPN_INTERNET="yes"
+else
+    VPN_INTERNET="no"
+fi
 
 if [ "server" = "$VPN_MODE" ] ; then
   if [ -e /etc/ipsec.conf ]; then
@@ -1004,13 +1019,13 @@ else
     echo "  leftfirewall=yes" >> /etc/ipsec.conf
     echo "  right=${SERVER_URL}" >> /etc/ipsec.conf
     echo "  rightid=@server" >> /etc/ipsec.conf
-    if [ "yes" = "$VIRTUALIP" ]; then
-      echo "  rightsubnet=10.100.0.0/16" >> /etc/ipsec.conf
+    if [ "yes" = "$VPN_INTERNET" ]; then
+      echo "  rightsubnet=0.0.0.0/0" >> /etc/ipsec.conf
     else
-      RIGHT_SUBNET=$(prompt "Please input the server subnet:" "")
-      if [ -z "$RIGHT_SUBNET" ]; then
-        echo "#  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
+      if [ "yes" = "$VIRTUALIP" ]; then
+        echo "  rightsubnet=10.100.0.0/16" >> /etc/ipsec.conf
       else
+        RIGHT_SUBNET=$(prompt "Please input the server subnet:" "0.0.0.0/0")
         echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
       fi
     fi
@@ -1044,7 +1059,7 @@ ipsec_install() {
     echo "try to get the server subnet"
     SERVER_SUBNET=$(ip -o addr | grep global | awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}'|head -1)
     if [ -z "$SERVER_SUBNET" ]; then
-      SERVER_SUBNET="172.31.0.0/16"
+      SERVER_SUBNET="0.0.0.0/0"
     fi
   fi
 }
