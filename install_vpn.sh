@@ -1114,7 +1114,7 @@ openvpn_install()  {
        fi
        if [ "no" = "$EASYRSA_EXIST" ] ; then
          echo "Download EasyRSA-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
-         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-${EASYRSA_VERSION}.tgz
+         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/v${EASYRSA_VERSION}/EasyRSA-${EASYRSA_VERSION}.tgz
          tar xvf /tmp/EasyRSA-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
          mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
          rm -rf /tmp/EasyRSA*.tgz
@@ -1146,7 +1146,7 @@ openvpn_install()  {
 
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
-EASYRSA_VERSION="v3.0.7"
+EASYRSA_VERSION="3.0.7"
 check_root
 handle_args "$@"
 set_umask
