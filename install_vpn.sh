@@ -939,6 +939,8 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
       echo "  right=%any" >> /etc/ipsec.conf
       echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
+      echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
+      echo "  auto=add" >> /etc/ipsec.conf
       echo "# windows,linux,ikev2,cert" >> /etc/ipsec.conf
       echo "conn ikev2_cert" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
