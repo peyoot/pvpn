@@ -365,7 +365,7 @@ finish_pvpn() {
       if [ -n "$NO_SERVER_VIRTUALIP"]; then
         if [ "yes" = "$VIRTUALIP" ]; then
           if "yes" = "$NO_SERVER_VIRTUALIP"];then
-            ip addr add 10.100.100.254/24 dev 
+            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}  
           fi
         fi
       fi
@@ -927,30 +927,30 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  uniqueids=never" >> /etc/ipsec.conf
       echo "conn %default" >> /etc/ipsec.conf
       echo "  left=%any" >> /etc/ipsec.conf
-      echo "  #  leftsubnet=0.0.0.0/0" >> /etc/ipsec.conf
-      echo "  right=%any" >> /etc/ipsec.conf
-      echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
+      echo "  leftsubnet=0.0.0.0/0" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
       echo "  leftid=@server" >> /etc/ipsec.conf
       echo "  # leftfirewall=yes" >> /etc/ipsec.conf
-      echo "  # some android use ikev1 and xauth psk" >> /etc/ipsec.conf
+      echo "# some android use ikev1 and xauth psk" >> /etc/ipsec.conf
       echo "conn ikev1_psk_xauth" >> /etc/ipsec.conf
       echo "  keyexchange=ikev1" >> /etc/ipsec.conf
       echo "  leftauth=psk" >> /etc/ipsec.conf
       echo "  rightauth=psk" >> /etc/ipsec.conf
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "  right=%any" >> /etc/ipsec.conf
+      echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
       echo "# windows,linux,ikev2,cert" >> /etc/ipsec.conf
       echo "conn ikev2_cert" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
-      echo "  leftsubnet=10.100.0.0/16" >> /etc/ipsec.conf
+      echo "#  leftsubnet=10.100.0.0/16" >> /etc/ipsec.conf
       echo "  rightauth=pubkey" >> /etc/ipsec.conf
       echo "  rightid=@client" >> /etc/ipsec.conf
-      echo "  rightcert=clientcert.pem" >> /etc/ipsec.conf
+      echo " rightcert=clientcert.pem" >> /etc/ipsec.conf
       if [ "yes" = "$VIRTUALIP" ]; then
         echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       else
-        RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+        RIGHT_SUBNET=$(prompt "Please input the client subnet:" "0.0.0.0/0")
       echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
       fi
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
@@ -983,7 +983,7 @@ if [ "server" = "$VPN_MODE" ] ; then
         if [ "yes" = "$VIRTUALIP" ]; then
           echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
         else
-          RIGHT_SUBNET=$(prompt "Please input the client subnet:" "192.168.1.0/24")
+          RIGHT_SUBNET=$(prompt "Please input the client subnet:" "0.0.0.0/0")
         echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
         fi
         echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
