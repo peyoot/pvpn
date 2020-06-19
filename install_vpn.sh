@@ -1113,9 +1113,9 @@ openvpn_install()  {
          fi
        fi
        if [ "no" = "$EASYRSA_EXIST" ] ; then
-         echo "Download EasyRSA-unix-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
-         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-unix-${EASYRSA_VERSION}.tgz
-         tar xvf /tmp/EasyRSA-unix-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
+         echo "Download EasyRSA-{$EASYRSA_VERSION}.tgz via wget and then extract it into /etc/openvpn/easyrsa" | tee -a /var/log/pvpn_install.log
+         wget -P /tmp/ https://github.com/OpenVPN/easy-rsa/releases/download/${EASYRSA_VERSION}/EasyRSA-${EASYRSA_VERSION}.tgz
+         tar xvf /tmp/EasyRSA-${EASYRSA_VERSION}.tgz -C /etc/openvpn/
          mv /etc/openvpn/EasyRSA-${EASYRSA_VERSION} /etc/openvpn/easyrsa
          rm -rf /tmp/EasyRSA*.tgz
        fi
