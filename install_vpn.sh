@@ -1146,7 +1146,7 @@ openvpn_install()  {
 
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
-EASYRSA_VERSION="v3.0.6"
+EASYRSA_VERSION="v3.0.7"
 check_root
 handle_args "$@"
 set_umask
