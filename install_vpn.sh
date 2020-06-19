@@ -362,10 +362,10 @@ finish_pvpn() {
         fi
       fi
       NO_SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
-      if [ -n "$NO_SERVER_VIRTUALIP"]; then
+      if [ -n "$NO_SERVER_VIRTUALIP" ]; then
         if [ "yes" = "$VIRTUALIP" ]; then
-          if "yes" = "$NO_SERVER_VIRTUALIP"];then
-            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}  
+          if "yes" = "$NO_SERVER_VIRTUALIP" ]; then
+            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
           fi
         fi
       fi
