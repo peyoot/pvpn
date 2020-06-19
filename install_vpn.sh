@@ -361,12 +361,14 @@ finish_pvpn() {
            echo "keep ipsec iptables rules untapped"
         fi
       fi
-      NO_SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
-      if [ -n "$NO_SERVER_VIRTUALIP" ]; then
-        if [ "yes" = "$VIRTUALIP" ]; then
-          if "yes" = "$NO_SERVER_VIRTUALIP" ]; then
-            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
-          fi
+
+      if [ "yes" = "$VIRTUALIP" ]; then
+        SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
+        if [ -n "$SERVER_VIRTUALIP" ]; then
+          echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
+        else
+          echo "set VPN server ip as 10.100.100.254" 
+          ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
         fi
       fi
 
