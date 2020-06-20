@@ -984,6 +984,8 @@ if [ "server" = "$VPN_MODE" ] ; then
         echo "  keyexchange=ikev2" >> /etc/ipsec.conf
         echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
         echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
+        echo "  rightcert=${CLIENT_USER}cert.pem" >> /etc/ipsec.conf
+
         if [ "yes" = "$VIRTUALIP" ]; then
           echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
         else
