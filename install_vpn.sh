@@ -904,7 +904,7 @@ ovpn_config_file() {
 
 ipsec_config_file() {
 #configure ipsec herek
-if prompt-yesno "Would you like to tunnel all  trafic to VPN server" "no" ; then
+if prompt-yesno "Would you like to tunnel all  trafic to VPN server" "yes" ; then
     VPN_INTERNET="yes"
 else
     VPN_INTERNET="no"
