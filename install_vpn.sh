@@ -691,10 +691,10 @@ ipsecclient_from_server() {
     echo "  # uniquyeids=no" >> /tmp/ipsec.conf
     echo "conn %default" >> /tmp/ipsec.conf
     echo "  keyexchange=ikev2" >> /tmp/ipsec.conf
-    echo "  ike=aes256-sha1-modp1024" >> /tmp/ipsec.conf
+    echo "#  ike=aes256-sha1-modp1024" >> /tmp/ipsec.conf
 
 
-    echo "conn nat-t" >> /tmp/ipsec.conf
+    echo "conn pvpn" >> /tmp/ipsec.conf
     echo "  left=%defaultroute" >> /tmp/ipsec.conf
     echo "  leftid=@${CLIENT_USER}" >> /tmp/ipsec.conf
     echo "  leftcert=${CLIENT_USER}cert.pem" >> /tmp/ipsec.conf
@@ -938,7 +938,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  keyexchange=ikev1" >> /etc/ipsec.conf
       echo "  leftauth=psk" >> /etc/ipsec.conf
       echo "  rightauth=psk" >> /etc/ipsec.conf
-      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
       echo "  right=%any" >> /etc/ipsec.conf
       echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
@@ -946,7 +946,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "# windows,linux,ikev2,cert" >> /etc/ipsec.conf
       echo "conn ikev2_cert" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
       echo "#  leftsubnet=10.100.0.0/16" >> /etc/ipsec.conf
       echo "  rightauth=pubkey" >> /etc/ipsec.conf
       echo "  rightid=@client" >> /etc/ipsec.conf
@@ -962,8 +962,8 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "# windows,IOS 9+, EAP" >> /etc/ipsec.conf
       echo "conn ikev2_eap" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
-      echo "  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
+      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "#  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
       echo "  rekey=no" >> /etc/ipsec.conf
       echo "  leftauth=pubkey" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
@@ -982,7 +982,7 @@ if [ "server" = "$VPN_MODE" ] ; then
         echo "# additional client ikev2 cert support" >> /etc/ipsec.conf   
         echo "conn ikev2_cert_${CLIENT_USER}" >> /etc/ipsec.conf
         echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-        echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+        echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
         echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
         if [ "yes" = "$VIRTUALIP" ]; then
           echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
@@ -1012,8 +1012,8 @@ else
     echo "  # uniqueids=no" >> /etc/ipsec.conf
     echo "conn %default" >> /etc/ipsec.conf
     echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-    echo "  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
-    echo "conn nat-t" >> /etc/ipsec.conf
+    echo "#  ike=aes256-sha1-modp1024" >> /etc/ipsec.conf
+    echo "conn pvpn" >> /etc/ipsec.conf
     echo "  left=%defaultroute" >> /etc/ipsec.conf
     echo "  leftid=@${CLIENT_USER}" >> /etc/ipsec.conf
     echo "  leftcert=${CLIENT_USER}cert.pem" >> /etc/ipsec.conf
@@ -1037,7 +1037,7 @@ else
     echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA ${CLIENT_USER}key.pem" >> /etc/ipsec.secrets
-    echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up nat-t"
+    echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up pvpn"
     echo "Please download http://$SERVER_URL:8000/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
     echo "To extract to the right place: sudo unzip pvpn-ipsec-clientcerts.zip -d /etc/"
 fi
