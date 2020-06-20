@@ -30,11 +30,13 @@ UDP 500,4500:  These two used by ipsec VPN.
 
 Scripts currently only support ubuntu 16.04 or 18.04
 After installation, to start the vpn in client PC:
+For example in Linux PC:
 For openvpn in ubuntu 18.04:  sudo systemctl start openvpn-client@client
-For strongswan ipsec: ipsec up nat-t
+For strongswan ipsec: ipsec up pvpn
 
 To do list:
 ----
+
 
 PVPN scripts is originally designed to simplify the palfort vpn set up and configuration process. Now you can take advantage of it to set up your own VPN network.
 Palfort is an internet organization that aimed to gather people in the world to co-work together and build all necessary software and platform that you may need in "Internet Age". 
