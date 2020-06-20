@@ -933,21 +933,21 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
       echo "  leftid=@server" >> /etc/ipsec.conf
       echo "  # leftfirewall=yes" >> /etc/ipsec.conf
-      echo "# some android use ikev1 and xauth psk" >> /etc/ipsec.conf
+      echo "# IOS or android can use ikev1 and xauth psk" >> /etc/ipsec.conf
       echo "conn ikev1_psk_xauth" >> /etc/ipsec.conf
       echo "  keyexchange=ikev1" >> /etc/ipsec.conf
       echo "  leftauth=psk" >> /etc/ipsec.conf
       echo "  rightauth=psk" >> /etc/ipsec.conf
-      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+      echo "  rightauth2=xauth" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024" >> /etc/ipsec.conf
       echo "  right=%any" >> /etc/ipsec.conf
-      echo "  rightsourceip=100.100.100.0/24" >> /etc/ipsec.conf
+      echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
       echo "  auto=add" >> /etc/ipsec.conf
       echo "# windows,linux,ikev2,cert" >> /etc/ipsec.conf
       echo "conn ikev2_cert" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
-      echo "#  leftsubnet=10.100.0.0/16" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024" >> /etc/ipsec.conf
       echo "  rightauth=pubkey" >> /etc/ipsec.conf
       echo "  rightid=@client" >> /etc/ipsec.conf
       echo " rightcert=clientcert.pem" >> /etc/ipsec.conf
@@ -962,8 +962,8 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "# windows,IOS 9+, EAP" >> /etc/ipsec.conf
       echo "conn ikev2_eap" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-      echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
-      echo "#  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
+      echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024" >> /etc/ipsec.conf
+      echo "  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
       echo "  rekey=no" >> /etc/ipsec.conf
       echo "  leftauth=pubkey" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
@@ -982,7 +982,7 @@ if [ "server" = "$VPN_MODE" ] ; then
         echo "# additional client ikev2 cert support" >> /etc/ipsec.conf   
         echo "conn ikev2_cert_${CLIENT_USER}" >> /etc/ipsec.conf
         echo "  keyexchange=ikev2" >> /etc/ipsec.conf
-        echo "#  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024!" >> /etc/ipsec.conf
+        echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024" >> /etc/ipsec.conf
         echo "  rightid=@${CLIENT_USER}" >> /etc/ipsec.conf
         echo "  rightcert=${CLIENT_USER}cert.pem" >> /etc/ipsec.conf
 
