@@ -524,6 +524,7 @@ generate_certs() {
       echo "zip ca.crt client*.key,client*.crt to pvpn-openvpn-clientcerts.zip"
       mkdir -p /tmp/openvpn
       cp  ./pki/ca.crt ./pki/private/${CLIENT_USER}.key ./pki/issued/${CLIENT_USER}.crt  /tmp/openvpn/
+      chmod a+r /tmp/openvpn/*
       ovpnclient_for_win 
       echo "Now also generate pkcs12 cert for client. "
       openssl pkcs12 -export -clcerts -in ./pki/issued/${CLIENT_USER}.crt -inkey ./pki/private/${CLIENT_USER}.key -out /tmp/openvpn/${CLIENT_USER}.p12 -passout pass:
