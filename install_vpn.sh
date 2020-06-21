@@ -676,7 +676,7 @@ ovpnclient_for_win() {
     echo "key ${CLIENT_USER}.key" >> /tmp/openvpn/client.ovpn
     echo "remote 127.0.0.1 11000" >> /tmp/openvpn/client.ovpn
     echo "resolv-retry infinite" >> /tmp/openvpn/client.ovpn
-    echo "dhcp-option DNS 9.9.9.9,149.112.112.112" >> /tmp/openvpn/client.ovpn
+    echo "dhcp-option DNS 1.1.1.1" >> /tmp/openvpn/client.ovpn
     echo "nobind" >> /tmp/openvpn/client.ovpn
     echo "${OVPN_COMPRESS}" >> /tmp/openvpn/client.ovpn
 }
