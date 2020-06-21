@@ -651,7 +651,7 @@ generate_certs() {
       chmod a+r /var/www/html/strongswan/${CLIENT_USER}.p12
       mv /tmp/ipsec.conf /var/www/html/strongswan/
       mv /tmp/ipsec.secrets /var/www/html/strongswan/
-      rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.* /tmp/openvpn
+      rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.*
     fi
   else
    echo "you need to download your client certs (in /tmp/) for the use in client PC"
