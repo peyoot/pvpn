@@ -489,7 +489,7 @@ generate_certs() {
       fi
     fi
     if [ "yes" = "$NEED_SCERT" ]; then
-        ./easyrsa build-client-full server nopass
+        ./easyrsa build-server-full server nopass
         echo "copy server key and cert to config folder"
         openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12 -passout pass:
         cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
