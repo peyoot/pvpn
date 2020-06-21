@@ -970,6 +970,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  leftsendcert=always" >> /etc/ipsec.conf
       echo "  rightauth=eap-mschapv2" >> /etc/ipsec.conf
       echo "  rightsendcert=never" >> /etc/ipsec.conf
+      echo "  rightsourceip=10.100.100.0/24" >> /etc/ipsec.conf
       echo "  eap_identity=%any" >> /etc/ipsec.conf
       echo "  fragmentation=yes" >> /etc/ipsec.conf
       echo "  rightdns=1.1.1.1" >> /etc/ipsec.conf
