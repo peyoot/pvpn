@@ -604,7 +604,7 @@ generate_certs() {
               fi
           fi
           if [ "yes" = "$NEEDDH" ] ; then
-            openssl dhparam -out dh.pem 2048   
+            openssl dhparam -out dh.pem 1024
             mv dh.pem /etc/openvpn/
           fi
         fi
