@@ -548,7 +548,7 @@ generate_certs() {
 
     if [ "yes" = "$NEED_SCERT" ]; then
         ipsec pki --gen --outform pem > /etc/ipsec.d/private/serverkey.pem
-        ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
+        ipsec pki --pub --in /etc/ipsec.d/private/serverkey.pem | ipsec pki --issue --cacert /etc/ipsec.d/cacerts/cacert.pem --cakey /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=server" --san server --san ${SERVER_URL} --flag serverAuth --flag ikeIntermediate --outform pem > /etc/ipsec.d/certs/servercert.pem
         echo "Server cert have been generated"
     fi
     if [ -e /etc/ipsec.d/certs/clientcert.pem ]; then
@@ -963,7 +963,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "conn ikev2_eap" >> /etc/ipsec.conf
       echo "  keyexchange=ikev2" >> /etc/ipsec.conf
       echo "  ike=aes256-sha256-modp1024,3des-sha1-modp1024,aes256-sha1-modp1024" >> /etc/ipsec.conf
-      echo "  esp=aes256-sha256,3des-sha1,aes256-sha1!" >> /etc/ipsec.conf
+      echo "  esp=aes256-sha256,3des-sha1,aes256-sha1" >> /etc/ipsec.conf
       echo "  rekey=no" >> /etc/ipsec.conf
       echo "  leftauth=pubkey" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
