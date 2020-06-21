@@ -1052,7 +1052,7 @@ ipsec_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan strongswan-pki" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan
-  apt install -y  strongswan-pki 
+  apt install -y  strongswan-pki libcharon-extra-plugins 
   if prompt-yesno "Would you like IPsec VPN server to allocate virtual IP for clients" yes; then
     VIRTUALIP="yes"
   else
