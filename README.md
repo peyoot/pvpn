@@ -15,7 +15,10 @@ Scripts have been tested with Ubuntu 18.04. Other version of Ubuuntu or Debian m
 You simply need to run the same script in server or client PC. <br>
 sudo ./install_vpn.sh <br>
 
-And then follow the instruction to select server/client mode and VPN type. You'll need to input public IP of VPN server. Most of the rest you only need to press "Enter" key follow the prompts. But you'll need to input "yes" in the server/client certs generation process if you choose install openvpn solo. 
+You need to install VPN server first which will help you generates all certifications that may needed. You can use these certifications in any client OS: linux ,Android,Mac, windows,etc.
+
+Follow the instruction to select server/client mode and VPN type. You'll need to input public IP of VPN server. And then choose if you're installing VPN server (VPN Responder) or VPN client(VPN Initiator).
+Most of the rest you only need to press "Enter" key follow the prompts if you don't know how to do it.  
 
 
 PVPN scripts will help you generated every thing serer needed and also generated a client certification for the use in home or office PC/laptop. You can download client certs directly from server via web browser.
