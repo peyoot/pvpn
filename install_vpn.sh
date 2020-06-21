@@ -489,9 +489,7 @@ generate_certs() {
       fi
     fi
     if [ "yes" = "$NEED_SCERT" ]; then
-        ./easyrsa gen-req server nopass
-        sleep 1
-        ./easyrsa sign server server
+        ./easyrsa build-client-full server nopass
         echo "copy server key and cert to config folder"
         openssl pkcs12 -export -clcerts -in ./pki/issued/server.crt -inkey ./pki/private/server.key -out /etc/stunnel/server.p12 -passout pass:
         cp  ./pki/ca.crt ./pki/private/server.key ./pki/issued/server.crt /etc/openvpn/
@@ -518,19 +516,18 @@ generate_certs() {
       fi
     fi
     if [ "yes" = "$ADD_CLIENT" ]; then
-        ./easyrsa gen-req ${CLIENT_USER} nopass
-        ./easyrsa sign client ${CLIENT_USER}
+        ./easyrsa build-client-full ${CLIENT_USER} nopass
     fi
 
 
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
       echo "zip ca.crt client*.key,client*.crt to pvpn-openvpn-clientcerts.zip"
       mkdir -p /tmp/openvpn
-      cp  ./pki/ca.crt ./pki/private/client*.key ./pki/issued/client*.crt  /tmp/openvpn/
+      cp  ./pki/ca.crt ./pki/private/${CLIENT_USER}.key ./pki/issued/${CLIENT_USER}.crt  /tmp/openvpn/
       ovpnclient_for_win 
       echo "Now also generate pkcs12 cert for client. "
-      openssl pkcs12 -export -clcerts -in ./pki/issued/client.crt -inkey ./pki/private/client.key -out /tmp/openvpn/client.p12 -passout pass:
-      zip -j /tmp/pvpn-openvpn-clientcerts.zip ./pki/ca.crt ./pki/issued/client.crt ./pki/private/client.key /tmp/openvpn/client.p12 /tmp/openvpn/client.ovpn
+      openssl pkcs12 -export -clcerts -in ./pki/issued/${CLIENT_USER}.crt -inkey ./pki/private/${CLIENT_USER}.key -out /tmp/openvpn/${CLIENT_USER}.p12 -passout pass:
+      zip -j /tmp/pvpn-openvpn-${CLIENT_USER}certs.zip ./pki/ca.crt ./pki/issued/${CLIENT_USER}.crt ./pki/private/${CLIENT_USER}.key /tmp/openvpn/${CLIENT_USER}.p12 /tmp/openvpn/${CLIENT_USER}.ovpn
     else
        echo "Please manually put client ca,key,cert in client PC"
     fi
@@ -613,13 +610,13 @@ generate_certs() {
         fi
         mkdir -p /tmp/openvpn
         echo "Copy client cert to openvpn temp config folder"
-        mv /tmp/ipsec.d/certs/clientcert.pem /tmp/openvpn/client.crt
-        mv /tmp/ipsec.d/private/clientkey.pem /tmp/openvpn/client.key
+        mv /tmp/ipsec.d/certs/${CLIENT_USER}cert.pem /tmp/openvpn/${CLIENT_USER}.crt
+        mv /tmp/ipsec.d/private/${CLIENT_USER}key.pem /tmp/openvpn/${CLIENT_USER}.key
         ovpnclient_for_win
         sync
         echo "Now also generate a pkcs12 cert for client. "
 #        openssl pkcs12 -export -clcerts -in /tmp/openvpn/client.crt -inkey /tmp/openvpn/client.key -out /tmp/client.p12 -passout pass:
-        zip -j pvpn-openvpn-clientcerts.zip ./client.p12 ./openvpn/client.ovpn /etc/openvpn/ca.crt ./openvpn/client.crt ./openvpn/client.key
+        zip -j pvpn-openvpn-${CLIENT_USER}certs.zip ./${CLIENT_USER}.p12 ./openvpn/${CLIENT_USER}.ovpn /etc/openvpn/ca.crt ./openvpn/${CLIENT_USER}.crt ./openvpn/${CLIENT_USER}.key
       fi
 
 # end of if dualvpn
@@ -675,8 +672,8 @@ ovpnclient_for_win() {
     echo "proto tcp" >> /tmp/openvpn/client.ovpn
     echo "dev ${OVPN_INTERFACE}" >> /tmp/openvpn/client.ovpn
     echo "ca ca.crt" >> /tmp/openvpn/client.ovpn
-    echo "cert client.crt" >> /tmp/openvpn/client.ovpn
-    echo "key client.key" >> /tmp/openvpn/client.ovpn
+    echo "cert ${CLIENT_USER}.crt" >> /tmp/openvpn/client.ovpn
+    echo "key ${CLIENT_USER}.key" >> /tmp/openvpn/client.ovpn
     echo "remote 127.0.0.1 11000" >> /tmp/openvpn/client.ovpn
     echo "resolv-retry infinite" >> /tmp/openvpn/client.ovpn
     echo "dhcp-option DNS 9.9.9.9,149.112.112.112" >> /tmp/openvpn/client.ovpn
@@ -847,8 +844,8 @@ ovpn_config_file() {
     echo "proto tcp" >> $OVPN_CONFIG_CDIR/client.conf
     echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_CDIR/client.conf
     echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "cert /etc/openvpn/client.crt" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "key /etc/openvpn/client.key" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "cert /etc/openvpn/${CLIENT_USER}.crt" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "key /etc/openvpn/${CLIENT_USER}.key" >> $OVPN_CONFIG_CDIR/client.conf
     echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_CDIR/client.conf
     echo "resolv-retry infinite" >> $OVPN_CONFIG_CDIR/client.conf
     echo "nobind" >> $OVPN_CONFIG_CDIR/client.conf
