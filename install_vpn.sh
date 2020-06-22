@@ -271,7 +271,7 @@ confirm_install() {
   echo "prepare some software packages for scripts to use"
   echo "apt update" | tee -a /var/log/pvpn_install.log 
   apt update
-  apt -y install gawk
+  apt -y install gawk resolvconf
   if [ ! -e /usr/bin/zip ]; then
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
