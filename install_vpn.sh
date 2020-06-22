@@ -329,6 +329,8 @@ finish_pvpn() {
     NETINTERFACE=$(ip route | grep default | awk '{print $5}')
     if [ "openvpn" != "$VPN_TYPE" ]; then
 #do ipsec finishing stuff here
+:<<!
+#comment out the following because rightdns do the same
       if ! grep "dns" /etc/strongswan.conf >/dev/null
       then
         PUSH_DNS=yes
@@ -339,6 +341,7 @@ finish_pvpn() {
       else
         echo "strongswan already have dns in config file"
       fi
+!
       echo "restart ipsec"
 # set iptables for ipsec
       IPSEC_RULES=$(iptables -nL -t nat|grep  10.100.100.0 -m -1 | awk '{print $4}')
