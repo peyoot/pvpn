@@ -183,20 +183,6 @@ else
       fi 
 fi
 echo "Your ubuntu version is: ${UBUNTU_VERSION}"
-SERVER_URL=$(prompt "Please input the server public IP:" "")
-if [ -z "$SERVER_URL" ]; then
-   echo "you need input the VPN server's public IP address so that scripts know how to configure it"
-   echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
-   echo "SERVER CIDR detecting $(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/' -f 1)"
-   IPADDR=$(ip -o addr | grep global | awk '/^[0-9]/ {print gensub(/(.*)\/(.*)/,"\\1","g",$4)}'|head -1)
-   if prompt-yesno "Is your server IP address ${IPADDR} ?" yes; then 
-     SERVER_URL="$IPADDR"
-   else
-     echo "pvpn installation aborted"
-     exit 1
-   fi
-
-fi
 #set necessary variables
 NEEDPKICA="yes"
 NEEDDH="yes"
@@ -221,15 +207,24 @@ else
     echo ""
     echo "1. Install VPN server with public IP in the internet (press enter to accept this default)"
     echo "2. Install VPN client on a PC in your home or office, so that it can set up VPN tunnel with the VPN server "
+    echo "3. VPN Server have installed. Need extend webfs service for a while so that client can download certifications from this server."
     echo ""
     CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to install?" "1")
   fi
   if [ "1" = "$CHOSEN_VPN_MODE" ] ; then
     echo "Select VPN server mode" | tee /var/log/pvpn_install.log
     VPN_MODE="server"
-  else
+  elif [ "2" = "$CHOSEN_VPN_MODE" ]; then
     echo "Select VPN client mode " | tee -a /var/log/pvpn_install.log
     VPN_MODE="client"
+  else
+    echo "Please input the expired time for webfs service "
+    OPEN_HOURS=$(prompt "Enable webfs for another 12 hours:" "12")
+    systemctl start webfs
+    echo "webfs servcie will be stop after specified time for security issue. You won't be able to download related client certs at that time"
+    systemctl stop webfs |at now + ${OPEN_HOURS} hours
+    echo "you can re-enable webfs service any time by command: sudo systemctl start webfs, or just rerun this scripts if you need more time to download client certs"
+    exit 1
   fi
     
   if [ -z "${CHOSEN_VPN_TYPE:-}" ]; then
@@ -276,6 +271,21 @@ confirm_install() {
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
   fi
+
+  SERVER_URL=$(prompt "Please input the server public IP:" "")
+  if [ -z "$SERVER_URL" ]; then
+     echo "you need input the VPN server's public IP address so that scripts know how to configure it"
+     echo "scripts now auto-detect your IP address. It may not be the right one if you use some cloud servers which didin't bind public IP to interface"
+     echo "SERVER CIDR detecting $(ip -o addr|grep dnamic |awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}' |cut -d'/' -f 1)"
+     IPADDR=$(ip -o addr | grep global | awk '/^[0-9]/ {print gensub(/(.*)\/(.*)/,"\\1","g",$4)}'|head -1)
+     if prompt-yesno "Is your server IP address ${IPADDR} ?" yes; then
+       SERVER_URL="$IPADDR"
+     else
+       echo "pvpn installation aborted"
+       exit 1
+     fi
+  fi
+
 #  apt install -y net-tools
   if [ "server" = "$VPN_MODE" ]; then
 #check webf availability
@@ -319,7 +329,7 @@ confirm_setting() {
 
 finish_pvpn() {
   if [ "server" = "$VPN_MODE" ]; then 
-    if [ ! -e /etc/webfsd.conf ]; then
+    if [ -e /etc/webfsd.conf ]; then
       echo "start webfs service"
       systemctl start webfs
       echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
