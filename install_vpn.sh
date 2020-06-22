@@ -223,7 +223,7 @@ else
       OPEN_HOURS=$(prompt "Enable webfs for another 12 hours:" "12")
       systemctl start webfs
       echo "webfs servcie will be stop after specified time for security issue. You won't be able to download related client certs at that time"
-      systemctl stop webfs |at now + ${OPEN_HOURS} hours
+      echo "systemctl stop webfs" |at now + ${OPEN_HOURS} hours
       echo "you can re-enable webfs service at any time when you need it"
       exit 1
     else
@@ -338,7 +338,7 @@ finish_pvpn() {
       echo "start webfs service"
       systemctl start webfs
       echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
-      systemctl stop webfs |at now + 24 hours
+      echo "systemctl stop webfs" |at now + 24 hours
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
     fi
     NETINTERFACE=$(ip route | grep default | awk '{print $5}')
