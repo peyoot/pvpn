@@ -207,7 +207,7 @@ else
     echo ""
     echo "1. Install VPN server with public IP in the internet (press enter to accept this default)"
     echo "2. Install VPN client on a PC in your home or office, so that it can set up VPN tunnel with the VPN server "
-    echo "3. VPN Server have installed. Need extend webfs service for a while so that client can download certifications from this server."
+    echo "3. Extend webfs service time on existing VPN Server so that client can download certifications from this server."
     echo ""
     CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to install?" "1")
   fi
@@ -219,12 +219,12 @@ else
     VPN_MODE="client"
   else
     if [ -e /etc/webfsd.conf ]; then
-      echo "Please input the expired time for webfs service "
+      echo "Please input the expire time for webfs service "
       OPEN_HOURS=$(prompt "Enable webfs for another 12 hours:" "12")
       systemctl start webfs
       echo "webfs servcie will be stop after specified time for security issue. You won't be able to download related client certs at that time"
       systemctl stop webfs |at now + ${OPEN_HOURS} hours
-      echo "you can re-enable webfs service any time by command: sudo systemctl start webfs, or just rerun this scripts if you need more time to download client certs"
+      echo "you can re-enable webfs service at any time when you need it"
       exit 1
     else
       echo "you haven't installed webfs on the server"
