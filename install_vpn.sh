@@ -218,13 +218,18 @@ else
     echo "Select VPN client mode " | tee -a /var/log/pvpn_install.log
     VPN_MODE="client"
   else
-    echo "Please input the expired time for webfs service "
-    OPEN_HOURS=$(prompt "Enable webfs for another 12 hours:" "12")
-    systemctl start webfs
-    echo "webfs servcie will be stop after specified time for security issue. You won't be able to download related client certs at that time"
-    systemctl stop webfs |at now + ${OPEN_HOURS} hours
-    echo "you can re-enable webfs service any time by command: sudo systemctl start webfs, or just rerun this scripts if you need more time to download client certs"
-    exit 1
+    if [ -e /etc/webfsd.conf ]; then
+      echo "Please input the expired time for webfs service "
+      OPEN_HOURS=$(prompt "Enable webfs for another 12 hours:" "12")
+      systemctl start webfs
+      echo "webfs servcie will be stop after specified time for security issue. You won't be able to download related client certs at that time"
+      systemctl stop webfs |at now + ${OPEN_HOURS} hours
+      echo "you can re-enable webfs service any time by command: sudo systemctl start webfs, or just rerun this scripts if you need more time to download client certs"
+      exit 1
+    else
+      echo "you haven't installed webfs on the server"
+      exit 1
+    fi
   fi
     
   if [ -z "${CHOSEN_VPN_TYPE:-}" ]; then
