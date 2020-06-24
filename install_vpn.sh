@@ -1068,18 +1068,21 @@ ipsec_install() {
   echo "about to install both strongswan and openvpn"
   echo "apt install -y strongswan strongswan-pki" | tee -a /var/log/pvpn_install.log
   apt install -y strongswan
-  apt install -y  strongswan-pki libcharon-extra-plugins 
+  apt install -y strongswan-pki 
+
   if prompt-yesno "Would you like IPsec VPN server to allocate virtual IP for clients" yes; then
     VIRTUALIP="yes"
   else
     VIRTUALIP="no"
   fi
 
+
   if [ "dualvpn" = "$VPN_TYPE" ]; then
     openvpn_install
   fi
   if [ "server" = "$VPN_MODE" ]; then
     echo "try to get the server subnet"
+    apt install -y libcharon-extra-plugins
     SERVER_SUBNET=$(ip -o addr | grep global | awk '/^[0-9]/ {print gensub(/(.*)/,"\\1","g",$4)}'|head -1)
     if [ -z "$SERVER_SUBNET" ]; then
       SERVER_SUBNET="0.0.0.0/0"
