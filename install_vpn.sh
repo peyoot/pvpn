@@ -389,7 +389,15 @@ finish_pvpn() {
           ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
         fi
       fi
-
+#disable cloud server keep alive
+      if prompt-yesno "Do you use cloud server which ethernet interface didn't bind the public IP by default? You may want to disable keep alive in server" "yes" ; then
+        if [ "$(grep -c keep_alive /etc/strongswan.conf)" = "0" ]; then
+           sed -i "/plugins/i\ \t\keep_alive = 0" /etc/strongswan.conf 
+        else
+           echo "keep_alive already set"
+        fi
+      fi
+#end of disable cloud server  keep alive
       echo "restart  ipsec "
       ipsec restart
     fi
