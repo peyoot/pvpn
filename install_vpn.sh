@@ -239,7 +239,7 @@ else
     echo "2. Install Strongswan only and use ipsec PKI tool"
     echo "3. Install both strongswan and openvpn, use ipsec PKI tool "
     echo ""
-    CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "3")
+    CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "2")
   fi
   if [ "1" = "$CHOSEN_VPN_TYPE" ]; then
     echo "Select openvpn over stunnel" | tee -a /var/log/pvpn_install.log
