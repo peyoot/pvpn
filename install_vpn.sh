@@ -157,30 +157,36 @@ check_root() {
 prepare_installation_paras() {
 #check out ubuntu version
 UBUNTU_VERSION="$(lsb_release --release | cut -f2)"
-if [ "18.04" = "${UBUNTU_VERSION}" ]; then
-      OVPN_CONFIG_SDIR="/etc/openvpn/server"
-      OVPN_SSERVICE="openvpn-server@server"
-      OVPN_CONFIG_CDIR="/etc/openvpn/client"
-      OVPN_CSERVICE="openvpn-client@client"
-      OVPN_COMPRESS="compress lz4-v2"
-      OVPN_LOG_DIR="/var/log/openvpn"
-      DNS_UPDATER="update-systemd-resolved"
+ARR_E+=("14.04")
+ARR_E+=("16.04")
+ARR_N+=("18.04")
+ARR_N+=("20.04")
+
+if [[ "${ARR_E[@]}" =~ "$UBUNTU_VERSION" ]]; then
+    OVPN_CONFIG_SDIR="/etc/openvpn"
+    OVPN_SSERVICE="openvpn@server"
+    OVPN_CONFIG_CDIR="/etc/openvpn"
+    OVPN_CSERVICE="openvpn@client"
+    OVPN_COMPRESS="comp-lzo"
+    OVPN_LOG_DIR="/var/log"
+    DNS_UPDATER="update-resolv-conf"
+elif [[ "${ARR_N[@]}" =~ "$UBUNTU_VERSION" ]]; then
+    OVPN_CONFIG_SDIR="/etc/openvpn/server"
+    OVPN_SSERVICE="openvpn-server@server"
+    OVPN_CONFIG_CDIR="/etc/openvpn/client"
+    OVPN_CSERVICE="openvpn-client@client"
+    OVPN_COMPRESS="compress lz4-v2"
+    OVPN_LOG_DIR="/var/log/openvpn"
+    DNS_UPDATER="update-systemd-resolved"
 else 
-      OVPN_CONFIG_SDIR="/etc/openvpn"
-      OVPN_SSERVICE="openvpn@server"
-      OVPN_CONFIG_CDIR="/etc/openvpn"
-      OVPN_CSERVICE="openvpn@client"
-      OVPN_COMPRESS="comp-lzo"
-      OVPN_LOG_DIR="/var/log"
-      DNS_UPDATER="update-resolv-conf"
-      if [ "16.04" != "${UBUNTU_VERSION}" ]; then
-         if prompt-yesno "This script only verified in ubuntu. Please do not try it in non-debian distribution!Contine?" no; then 
-             echo "only ubuntu 16.04 and 14.04 are verified. Take your own risk to try it in other version"
-         else
-             echo "pvpn installation aborted"
-             exit 1
-         fi
-      fi 
+    if prompt-yesno "This script only verified in ubuntu. Please do not try it in non-debian distribution!Contine?" no; then 
+        echo "only ubuntu are verified. Take your own risk to try it in other version"
+    else
+        echo "pvpn installation aborted"
+        exit 1
+    fi
+
+
 fi
 echo "Your ubuntu version is: ${UBUNTU_VERSION}"
 #set necessary variables
@@ -298,7 +304,7 @@ confirm_install() {
       if prompt-yesno "Would you like to install webfs so that scripts can help you to generate client certs download URL?" "yes" ; then
           echo "webfs will be installed.please wait...."
           echo "apt install -y webfs"
-          apt install -y webfs
+          apt install -y webfs at
           echo "sleep 1"
           sleep 1
           echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
