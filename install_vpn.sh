@@ -444,7 +444,7 @@ finish_pvpn() {
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
         fi
       fi
-      if [ "ipsec" != "$VPN_TYPE" ]; then
+      if [ "strongswan" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
         wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
         unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
