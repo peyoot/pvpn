@@ -347,6 +347,7 @@ finish_pvpn() {
       echo "webfs servcie will be stop after 24 hours for security issue. You won't be able to download related client certs at that time"
       echo "systemctl stop webfs" |at now + 24 hours
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
+      echo "You need input username and password if you want to download your certs manually,default username and password is pvpn/download"
     fi
     NETINTERFACE=$(ip route | grep default | awk '{print $5}')
     if [ "openvpn" != "$VPN_TYPE" ]; then
@@ -928,7 +929,7 @@ ovpn_config_file() {
 #    /etc/init.d/stunnel4 start
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
     echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
-    echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
+    echo "In ubuntu 18.04/20.04  you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
     echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
 }

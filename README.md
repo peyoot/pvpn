@@ -31,11 +31,16 @@ TCP 8000  :  webfs port for downloading certs and configuration automatically.
 TCP 8443  :  openvpn over stunnel, this is the port that stunnel4 service listen on
 UDP 500,4500:  These two used by ipsec VPN. 
 
-Scripts currently only support ubuntu 16.04 or 18.04
+Scripts currently only support ubuntu 16.04 or 18.04, 20.04
 After installation, to start the vpn in client PC:
 For example in Linux PC:
 For openvpn in ubuntu 18.04:  sudo systemctl start openvpn-client@client
 For strongswan ipsec: ipsec up pvpn
+
+Change Log:
+2020/9/11 Now enable webfs access with default username and password (pvpn:download), For manually download you'll need to input username and password to avoid vulnerable, you can change default username and password in webfsd.conf
+
+
 
 To do list:
 ----
