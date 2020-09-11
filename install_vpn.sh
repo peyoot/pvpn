@@ -307,6 +307,7 @@ confirm_install() {
           apt install -y webfs at
           echo "sleep 1"
           sleep 1
+          sed -i "/web_extras=\"\"/cweb_extras=\"-b pvpn:download\"" /etc/webfsd.conf
           echo "mkdir -p /var/www/html/pvpn" | tee -a /var/log/pvpn_install.log
           mkdir -p /var/www/html/pvpn
           echo "create /var/www/html/pvpn for webfs"
@@ -437,7 +438,7 @@ finish_pvpn() {
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
       if [ "openvpn" != "$VPN_TYPE" ]; then
         echo "Scripts now try to download ipsec client certs and config from server"
-        wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip
+        wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip --user pvpn --password download
         if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
         else
@@ -446,7 +447,7 @@ finish_pvpn() {
       fi
       if [ "strongswan" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-        wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-clientcerts.zip
+        wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-clientcerts.zip --user pvpn --password download
         unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
       sleep 1
