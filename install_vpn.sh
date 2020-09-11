@@ -277,7 +277,7 @@ confirm_install() {
   echo "prepare some software packages for scripts to use"
   echo "apt update" | tee -a /var/log/pvpn_install.log 
   apt update
-  apt -y install gawk resolvconf
+  apt -y install gawk
   if [ ! -e /usr/bin/zip ]; then
      echo "apt install -y zip" | tee -a /var/log/pvpn_install.log
      apt install -y zip
@@ -1131,8 +1131,8 @@ openvpn_install()  {
     apt install -y stunnel4
   fi
   if [ "no" = "$OVPN_EXIST" ] ; then
-    echo "apt install -y openvpn" | tee -a /var/log/pvpn_install.log
-    apt install -y openvpn
+    echo "apt install -y openvpn resolvconf" | tee -a /var/log/pvpn_install.log
+    apt install -y openvpn resolvconf
   fi
  
   echo "Check chosen vpn type and then install easyrsa3 if it's openvpn solo installation"
