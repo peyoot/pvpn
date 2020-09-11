@@ -307,9 +307,9 @@ confirm_install() {
           apt install -y webfs at
           echo "sleep 1"
           sleep 1
-          echo "mkdir -p /var/www/html" | tee -a /var/log/pvpn_install.log
-          mkdir -p /var/www/html
-          echo "create /var/www/html for webfs"
+          echo "mkdir -p /var/www/html/pvpn" | tee -a /var/log/pvpn_install.log
+          mkdir -p /var/www/html/pvpn
+          echo "create /var/www/html/pvpn for webfs"
       else
           echo "you've bypass the webfs installation. You'll need to manually copy client certs to client side later"
       fi
@@ -437,7 +437,7 @@ finish_pvpn() {
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
       if [ "openvpn" != "$VPN_TYPE" ]; then
         echo "Scripts now try to download ipsec client certs and config from server"
-        wget http://${SERVER_URL}:8000/pvpn-ipsec-${CLIENT_USER}certs.zip
+        wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip
         if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
           unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
         else
@@ -446,14 +446,14 @@ finish_pvpn() {
       fi
       if [ "strongswan" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-        wget http://${SERVER_URL}:8000/pvpn-openvpn-clientcerts.zip
+        wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-clientcerts.zip
         unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
       fi
       sleep 1
       echo "your vpn client have been installed and is ready for your usage."
       rm -rf pvpn*.zip
     else
-      echo "To start the VPN service please download the client certs from http://${SERVER_URL}:8000/,You also need to put it in the right place"
+      echo "To start the VPN service please download the client certs from http://${SERVER_URL}:8000/pvpn/,You also need to put it in the right place"
     fi
   fi
 }
@@ -666,24 +666,24 @@ generate_certs() {
 #  if [ -e /etc/webfsd.conf ] ; then
   if [ "no" = "$MANUALLY_DOWNLOAD" ]; then
     echo "put in webfs for downloads"
-    cp /tmp/pvpn*.zip /var/www/html/
+    cp /tmp/pvpn*.zip /var/www/html/pvpn/
 
-    echo "In linux, you can choose to autodownload and config clients. But please download from http://your-server-ip:8000/ and put it in client configuration path in other OS"
+    echo "In linux, you can choose to autodownload and config clients. But please download from http://your-server-ip:8000/pvpn/ and put it in client configuration path in other OS"
     if [ openvpn = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
       echo "you have openvpn installed"
-      mkdir -p /var/www/html/openvpn
-      cp /tmp/openvpn/* /var/www/html/openvpn/
+      mkdir -p /var/www/html/pvpn/openvpn
+      cp /tmp/openvpn/* /var/www/html/pvpn/openvpn/
       echo "For openvpn, please put stunnel.conf in stunnel config and unzip pvpn-openvpn-clientcerts.zip to opevpn config path"
       rm -rf /tmp/openvpn /tmp/pvpn-o*.zip
     fi
     if [ strongswan = "$VPN_TYPE" ]||[ dualvpn = "$VPN_TYPE" ]; then
       echo "you have strongswan installed"
-      mkdir -p /var/www/html/strongswan
-      cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/strongswan/
-      mv /tmp/${CLIENT_USER}.p12 /var/www/html/strongswan/
-      chmod a+r /var/www/html/strongswan/${CLIENT_USER}.p12
-      mv /tmp/ipsec.conf /var/www/html/strongswan/
-      mv /tmp/ipsec.secrets /var/www/html/strongswan/
+      mkdir -p /var/www/html/pvpn/strongswan
+      cp /etc/ipsec.d/cacerts/cacert.pem /var/www/html/pvpn/strongswan/
+      mv /tmp/${CLIENT_USER}.p12 /var/www/html/pvpn/strongswan/
+      chmod a+r /var/www/html/pvpn/strongswan/${CLIENT_USER}.p12
+      mv /tmp/ipsec.conf /var/www/html/pvpn/strongswan/
+      mv /tmp/ipsec.secrets /var/www/html/pvpn/strongswan/
       rm -rf /tmp/pvpn-i*.zip /tmp/ipsec.*
     fi
   else
@@ -926,7 +926,7 @@ ovpn_config_file() {
     systemctl restart stunnel4
 #    /etc/init.d/stunnel4 start
     echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
-    echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
+    echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
     echo "In ubuntu 18.04 you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
     echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
@@ -1071,7 +1071,7 @@ else
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA ${CLIENT_USER}key.pem" >> /etc/ipsec.secrets
     echo "strongswan configuration finished, you can start ipsec vpn at client side with command: ipsec up pvpn"
-    echo "Please download http://$SERVER_URL:8000/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
+    echo "Please download http://$SERVER_URL:8000/pvpn/pvpn-ipsec-clientcerts.zip and put it in the right place of your client"
     echo "To extract to the right place: sudo unzip pvpn-ipsec-clientcerts.zip -d /etc/"
 fi
 
