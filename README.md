@@ -21,7 +21,7 @@ The scripts was designed as interactive one. But most of the time you only need 
 
 
 ##### 1. Install and auto-configure VPN server
-You need to have a VPS on cloud or have a server with public IP. If you don't have one, simply buy one from any cloud service provider like AWS/Azure/Alicloud. For example, any type of AWS EC2 or Lightsnail instance will just work fine. VPN server need to be deployed in Linux. Scripts have been tested with Ubuntu 16.04,18.04 and 20.04. Other version of Ubuuntu or Debian may work but not garantee. 
+You need to have a VPS on cloud or have a server with public IP. If you don't have one, simply buy one from any cloud service provider like AWS/Azure/Alicloud. For example, any type of AWS EC2 or Lightsnail instance will just work fine. VPN server need to be deployed in Linux. Scripts have been tested with Ubuntu 16.04,18.04 and 20.04. Other version of Ubuntu or Debian may work but not garantee. 
 
 ##### EXAMPLE: Set up VPN server in AWS Lightsnail  
 First, creat an instance of AWS Lightsnail. Select Linux/unix platform,OS only, Ubuntu 18.04 and choose a plan. Then create the instance. 
@@ -36,13 +36,13 @@ Click on the VPS's name and go to Networking tab to configure firewall  and add 
 ![](https://raw.githubusercontent.com/peyoot/pic_bed/master/images20200920071014.png)
 
 Then go to connect tab, and connect it from web. Since the script may need to run a few while, it's better to run shell commands or scripts under tmux. 
-```shell
+```
 ubuntu@ip-172-26-5-182:~$ tmux
 ```
 If you close the browser accidentally You can resume the session later by "tmux attach".
 
 Download PVPN and run install_vpn.sh as root:
-```shell
+```
 ubuntu@ip-172-26-5-182:~$git clone https://github.com/peyoot/pvpn.git
 Cloning into 'pvpn'...remote: Enumerating objects: 145, done.
 remote: Counting objects: 100% (145/145), done.
@@ -50,9 +50,10 @@ remote: Compressing objects: 100% (102/102), done.remote: Total 770 (delta 47), 
 Receiving objects: 100% (770/770), 166.11 KiB | 351.00 KiB/s, done.
 Resolving deltas: 100% (249/249), done.
 ubuntu@ip-172-26-5-182:~$ cd pvpn
+```
 Now you can run the PVPN script to install VPN:
 
-```shell
+```
 ubuntu@ip-172-26-5-182:~/pvpn$ sudo ./install_vpn.sh
 Your ubuntu version is: 18.04
 PVPN installation scripts  makes it easy to set up openvpn and strongswan in your own server and PC within NAT You can:
@@ -72,7 +73,7 @@ Select VPN server modeYou can:
 ```
 
 And the next one goes to the place where you need to input server IP address. Input the correct one as you got from AWS management console.
-```shell
+```
 Please input the server Public IP: []
 ```
 
@@ -84,12 +85,22 @@ This vary from different platform on your devices:
 
 Linux
 ---
-Simply run the install_vpn.sh and choose to install VPN client in first selection tab. when it comes to input VPN server public IP address tab. Input the correct one. Simply press Enter for other interactive selection. It will automatically install and configure VPN client for you.
+Simply run
+```
+sudo install_vpn.sh
+```
+and choose to install VPN client in first selection tab. when it comes to input VPN server public IP address tab. Input the correct one. You'll just need to press Enter for other interactive selection. It will automatically install and download certs and configure VPN client for you.
 
 Windows
 ---
- * Strongswan
-Download the CA and put it in CA root. Add an Ipsec VPN, type is IKEV2.
+
+  * Strongswan
+Windows7 and Windows 10 can support IPSec IKEV2. You can open http://Server-IP:8000/pvpn/strongswan/ to download CA certification cacert.pem. 
+Then [store it in trusted Root Authentication Authorities](https://wiki.strongswan.org/projects/strongswan/wiki/Win7EapCert). 
+
+Then create an IPSEC IKEV2 VPN. Authentication using EAP-MSCHAP v2:
+> username:robin password:pvpnpassword
+You can change default username and password in conf file /etc/ipsec.secrects
 
  * OpenVPN
 Install Openvpn and stunnel. Put the certs and conf file in right place.
@@ -97,6 +108,11 @@ Install Openvpn and stunnel. Put the certs and conf file in right place.
 
 Android
 ---
+Install StrongSwan Client APP. Use cacert.pem as CA. and VPN type set as IKEV2 EAP.
+Username: robin
+Password: pvpnpassword
+ServerID: server
+ClientID: client
 
 iPad
 ---
