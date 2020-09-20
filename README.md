@@ -14,35 +14,96 @@ You can use on type of VPN or you can use both types of VPN in case you have som
 It's very simple as you can finish it in several minutes without any PC skills.
 Basically, You'll need to set up a VPN server first. Scripts will help you generate  CA/Key/Certifications in the VPN server and also generate a temporary webpage for you to download the client certifications for your devices. 
 
+Follow the instruction to select server/client mode and VPN type. You'll need to input public IP of VPN server. And then choose if you're installing VPN server (VPN Responder) or VPN client(VPN Initiator).
+  
 The scripts was designed as interactive one. But most of the time you only need to press Enter key. 
 
-##### 1. Install VPN server
+
+
+##### 1. Install and auto-configure VPN server
 You need to have a VPS on cloud or have a server with public IP. If you don't have one, simply buy one from any cloud service provider like AWS/Azure/Alicloud. For example, any type of AWS EC2 or Lightsnail instance will just work fine. VPN server need to be deployed in Linux. Scripts have been tested with Ubuntu 16.04,18.04 and 20.04. Other version of Ubuuntu or Debian may work but not garantee. 
 
 ##### EXAMPLE: Set up VPN server in AWS Lightsnail  
 First, creat an instance of AWS Lightsnail. Select Linux/unix platform,OS only, Ubuntu 18.04 and choose a plan. Then create the instance. 
+![](https://raw.githubusercontent.com/peyoot/pic_bed/master/imagesaws-lightsnail-1.PNG)
 
-Once the instance has been created. Find the public IP of it and record it. You may need it later
+Once the instance has been created. Find the public IP of it and record it. You may need it later.
+
 Click on the VPS's name and go to Networking tab to configure firewall  and add following rules:
-custom TCP: 8000,8443,11000
-custom UDP: 500,4500
+> IPsec: UDP 500,4500
+> Openvpn: TCP 8443,11000
+> Webfs:8000
+![](https://raw.githubusercontent.com/peyoot/pic_bed/master/images20200920071014.png)
 
-Then go to connect tab, and connect it from web. Since the script may need to run a few while, it's better to run in under tmux. 
-''''shell
-sudo apt update
-tmux
+Then go to connect tab, and connect it from web. Since the script may need to run a few while, it's better to run shell commands or scripts under tmux. 
+```shell
+ubuntu@ip-172-26-5-182:~$ tmux
+```
+If you close the browser accidentally You can resume the session later by "tmux attach".
 
-Download the script and run it as root:
+Download PVPN and run install_vpn.sh as root:
+```shell
+ubuntu@ip-172-26-5-182:~$git clone https://github.com/peyoot/pvpn.git
+Cloning into 'pvpn'...remote: Enumerating objects: 145, done.
+remote: Counting objects: 100% (145/145), done.
+remote: Compressing objects: 100% (102/102), done.remote: Total 770 (delta 47), reused 138 (delta 43), pack-reused 625
+Receiving objects: 100% (770/770), 166.11 KiB | 351.00 KiB/s, done.
+Resolving deltas: 100% (249/249), done.
+ubuntu@ip-172-26-5-182:~$ cd pvpn
+Now you can run the PVPN script to install VPN:
+
+```shell
+ubuntu@ip-172-26-5-182:~/pvpn$ sudo ./install_vpn.sh
+Your ubuntu version is: 18.04
+PVPN installation scripts  makes it easy to set up openvpn and strongswan in your own server and PC within NAT You can:
+1. Install VPN server with public IP in the internet (press enter to accept this default)
+2. Install VPN client on a PC in your home or office, so that it can set up VPN tunnel with the VPN server
+3. Extend webfs service time on existing VPN Server so that client can download certifications from this server.
+How are you going to install? [1]
+```
+
+Next one is to choose VPN Mode. By default Strongswan (IPSec)was seleted and you can press Enter to go next. Expert may choose to install OpenVPN solo or install both OpenVPN and Ipsec if they need. 
+
+```
+Select VPN server modeYou can:
+1. Install openvpn+stunnel only and use easyrsa3 as PKI( enter to accept this default)
+2. Install Strongswan only and use ipsec PKI tool
+3. Install both strongswan and openvpn, use ipsec PKI tool Please choose which vpn type you're about to install? [2] 
+```
+
+And the next one goes to the place where you need to input server IP address. Input the correct one as you got from AWS management console.
+```shell
+Please input the server Public IP: []
+```
+
+The rest you can simply press Enter each time till script finish the installation.
+Now you've got a VPN server installed.
+
+##### 2. Install and configure VPN CLient
+This vary from different platform on your devices:
+
+Linux
+---
+Simply run the install_vpn.sh and choose to install VPN client in first selection tab. when it comes to input VPN server public IP address tab. Input the correct one. Simply press Enter for other interactive selection. It will automatically install and configure VPN client for you.
+
+Windows
+---
+ * Strongswan
+Download the CA and put it in CA root. Add an Ipsec VPN, type is IKEV2.
+
+ * OpenVPN
+Install Openvpn and stunnel. Put the certs and conf file in right place.
+
+
+Android
+---
+
+iPad
+---
 
 
 
-
-
-You need to install VPN server first which will help you generates all certifications that may needed. You can use these certifications in any client OS: linux ,Android,Mac, windows,etc.
-
-Follow the instruction to select server/client mode and VPN type. You'll need to input public IP of VPN server. And then choose if you're installing VPN server (VPN Responder) or VPN client(VPN Initiator).
-Most of the rest you only need to press "Enter" key follow the prompts if you don't know how to do it.  
-
+#### Reference for those install VPN server on your own geer:
 
 PVPN scripts will help you generated every thing serer needed and also generated a client certification for the use in home or office PC/laptop. You can download client certs directly from server via web browser.
 All necessary certs,config files,scripts in Ubuntu server/client will be generated in server and download & extract in client automatically.
@@ -60,18 +121,16 @@ For example in Linux PC:
 For openvpn in ubuntu 18.04:  sudo systemctl start openvpn-client@client
 For strongswan ipsec: ipsec up pvpn
 
-Change Log:
-2020/9/11 Now enable webfs access with default username and password (pvpn:download), For manually download you'll need to input username and password to avoid vulnerable, you can change default username and password in webfsd.conf
+#### Latest updates:
+2020/9/11 
+
+Now enable webfs access with default username and password (pvpn:download), For manually download you'll need to input username and password to avoid vulnerable, you can change default username and password in webfsd.conf
 
 
-
-To do list:
-----
-
+---
 
 PVPN scripts is originally designed to simplify the palfort vpn set up and configuration process. Now you can take advantage of it to set up your own VPN network.
 Palfort is an internet organization that aimed to gather people in the world to co-work together and build all necessary software and platform that you may need in "Internet Age". 
 
 We believe as user and also as maker. We set up code and rules and also provide platforms, to prevent our future from kidnaped by internet gients like Google,Facebook,Amazon
 You're welcome to join Palfort. More information please feel free to send an email to peyoot#hotmail.com
-
