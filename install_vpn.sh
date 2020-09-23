@@ -349,7 +349,7 @@ finish_pvpn() {
       echo "you can re-enable webfs service any time by command: sudo systemctl start webfs if you need more time to download client certs"
       echo "You need input username and password if you want to download your certs manually,default username and password is pvpn/download"
     fi
-    NETINTERFACE=$(ip route | grep default | awk '{print $5}')
+    NETINTERFACE=$(ip route | grep default | awk '{print $5}' | head -1)
     if [ "openvpn" != "$VPN_TYPE" ]; then
 #do ipsec finishing stuff here
 :<<!
