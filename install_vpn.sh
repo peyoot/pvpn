@@ -1066,7 +1066,7 @@ else
     echo "  rightid=@server" >> /etc/ipsec.conf
     if [ "yes" = "$VPN_INTERNET" ]; then
       echo "  rightsubnet=0.0.0.0/0" >> /etc/ipsec.conf
-      echo "  auto=add" >> /ect/ipsec.conf
+      echo "  auto=add" >> /etc/ipsec.conf
       echo "conn local-net" >> /etc/ipsec.conf
       echo "  leftsubnet=${CLIENT_LSUBNET}" >> /etc/ipsec.conf
       echo "  rightsubnet=${CLIENT_LSUBNET},${SERVER_URL}/32" >> /etc/ipsec.conf
