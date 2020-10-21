@@ -738,14 +738,19 @@ ipsecclient_from_server() {
     echo "  rightid=@server" >> /tmp/ipsec.conf
     if [ "yes" = "$VPN_INTERNET" ]; then
       echo "  rightsubnet=0.0.0.0/0" >> /tmp/ipsec.conf
+      echo "  auto=add" >> /tmp/ipsec.conf
+#      echo "conn local-net" >> /tmp/ipsec.conf
+#      echo "  leftsubnet=%default" >> /tmp/ipsec.conf
     else
-      if [ "yes" = "$VIRTUALIP" ]; then
-        echo "  rightsubnet=10.100.0.0/16" >> /tmp/ipsec.conf
-      else
-        echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
-      fi
+      echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+      echo "  auto=add" >> /tmp/ipsec.conf
+#      if [ "yes" = "$VIRTUALIP" ]; then
+#        echo "  rightsubnet=10.100.0.0/16" >> /tmp/ipsec.conf
+#      else
+#        echo "  rightsubnet=${SERVER_SUBNET}" >> /tmp/ipsec.conf
+#      fi
     fi
-    echo "  auto=add" >> /tmp/ipsec.conf
+#    echo "  auto=add" >> /tmp/ipsec.conf
     echo -n "" > /tmp/ipsec.secrets
     echo ": RSA ${CLIENT_USER}key.pem" >> /tmp/ipsec.secrets
 
@@ -1040,6 +1045,7 @@ if [ "server" = "$VPN_MODE" ] ; then
   fi
 else
     CLIENT_USER=$(prompt "Please input the client username:" "client")
+    CLIENT_LSUBNET=$(ip route |grep -v -w default| awk '/dev/ {print $1}' | head -1)
     echo "start to configure ipsec client side"
     echo -n "" > /etc/ipsec.conf
     echo "config setup" >> /etc/ipsec.conf
@@ -1060,15 +1066,18 @@ else
     echo "  rightid=@server" >> /etc/ipsec.conf
     if [ "yes" = "$VPN_INTERNET" ]; then
       echo "  rightsubnet=0.0.0.0/0" >> /etc/ipsec.conf
-    else
-      if [ "yes" = "$VIRTUALIP" ]; then
-        echo "  rightsubnet=10.100.0.0/16" >> /etc/ipsec.conf
-      else
+      echo "  auto=add" >> /ect/ipsec.conf
+      echo "conn local-net" >> /etc/ipsec.conf
+      echo "  leftsubnet=${CLIENT_LSUBNET}" >> /etc/ipsec.conf
+      echo "  rightsubnet=${CLIENT_LSUBNET},${SERVER_URL}/32" >> /etc/ipsec.conf
+      echo "  authby=never" >> /etc/ipsec.conf
+      echo "  type=pass" >> /etc/ipsec.conf
+      echo "  auto=route" >> /etc/ipsec.conf 
+     else
         RIGHT_SUBNET=$(prompt "Please input the server subnet:" "0.0.0.0/0")
         echo "  rightsubnet=${RIGHT_SUBNET}" >> /etc/ipsec.conf
-      fi
+        echo "  auto=add" >> /etc/ipsec.conf
     fi
-    echo "  auto=add" >> /etc/ipsec.conf
     echo "now configuring VPN authenticaion method"
     echo -n "" > /etc/ipsec.secrets
     echo ": RSA ${CLIENT_USER}key.pem" >> /etc/ipsec.secrets
