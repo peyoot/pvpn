@@ -437,6 +437,7 @@ finish_pvpn() {
       echo "you've setup rc.local service already, please manually check if you've configure iptables-restore there"
     else
       echo "Install rc.local service for pvpn iptables restore"
+      echo "" >> /etc/systemd/system/rc-local.service
       echo "[Install]" >> /etc/systemd/system/rc-local.service
       echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
       echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
