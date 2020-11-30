@@ -440,7 +440,8 @@ finish_pvpn() {
       echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
       touch  /etc/rc.local
       echo "#!/bin/bash" >> /etc/rc.local
-      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
+      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local
+      chmod a+x /etc/rc.local 
       echo "service to restore iptables rules after reboot is set"
     else 
       echo "you've setup rc.local already, please manually check if you've set iptables-restore there"
