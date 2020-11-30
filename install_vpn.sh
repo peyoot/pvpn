@@ -433,7 +433,7 @@ finish_pvpn() {
       ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
     fi
     cat /etc/systemd/system/rc-local.service |grep Install
-    if [ 1="$?" ]; then
+    if [ 1=$? ]; then
       echo "Install rc.local service for pvpn iptables restore"
       echo "[Install]" >> /etc/systemd/system/rc-local.service
       echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
