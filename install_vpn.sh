@@ -424,16 +424,28 @@ finish_pvpn() {
         iptables-save > /etc/iptables.rules
       fi
     fi
+#both type need to setup iptables restore in rc.local
+    echo "Now setup iptables restore in rc.local and finishing VPN server setup"
     echo 1 > /proc/sys/net/ipv4/ip_forward
     sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-    ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-    echo "[Install]" >> /etc/systemd/system/rc-local.service
-    echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
-    echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
-    touch  /etc/rc.local
-    echo "#!/bin/bash" >> /etc/rc.local
-    echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
-    echo "service to restore iptables rules after reboot is set"
+####add iptables restore to rc.local service####
+    if [ -n /etc/systemd/system/rc-local.service ]; then
+      ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+    fi
+    cat /etc/systemd/system/rc-local.service |grep Install
+    if [ 1="$?" ]; then
+      echo "Install rc.local service for pvpn iptables restore"
+      echo "[Install]" >> /etc/systemd/system/rc-local.service
+      echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
+      echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
+      touch  /etc/rc.local
+      echo "#!/bin/bash" >> /etc/rc.local
+      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local 
+      echo "service to restore iptables rules after reboot is set"
+    else 
+      echo "you've setup rc.local already, please manually check if you've set iptables-restore there"
+    fi
+
   else
     echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
