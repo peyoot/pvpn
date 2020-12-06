@@ -155,6 +155,17 @@ check_root() {
 }
 
 prepare_installation_paras() {
+
+#record install log
+if [ -z /var/log/pvpn_install.log ]; then
+  echo "Install script first time run at:" |tee /var/log/pvpn_install.log
+  date | tee -a /var/log/pvpn_install.log
+else
+  echo "Install script run again at:" | tee -a /var/log/pvpn_install.log
+  date | gee -a /var/log/pvpn_install.log
+fi
+
+
 #check out ubuntu version
 UBUNTU_VERSION="$(lsb_release --release | cut -f2)"
 ARR_E+=("14.04")
@@ -185,8 +196,6 @@ else
         echo "pvpn installation aborted"
         exit 1
     fi
-
-
 fi
 echo "Your ubuntu version is: ${UBUNTU_VERSION}"
 #set necessary variables
@@ -218,7 +227,7 @@ else
     CHOSEN_VPN_MODE=$(prompt-numeric "How are you going to install?" "1")
   fi
   if [ "1" = "$CHOSEN_VPN_MODE" ] ; then
-    echo "Select VPN server mode" | tee /var/log/pvpn_install.log
+    echo "Select VPN server mode" | tee -a /var/log/pvpn_install.log
     VPN_MODE="server"
   elif [ "2" = "$CHOSEN_VPN_MODE" ]; then
     echo "Select VPN client mode " | tee -a /var/log/pvpn_install.log
@@ -340,6 +349,10 @@ confirm_setting() {
 }
 
 finish_pvpn() {
+  IPSECINSTALLED=$(cat /var/log/pvpn_install.log |grep ipsecinstalled)
+  OVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep ovpninstalled)
+  PVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep pvpninstalled)
+
   if [ "server" = "$VPN_MODE" ]; then 
     if [ -e /etc/webfsd.conf ]; then
       echo "start webfs service"
@@ -367,8 +380,8 @@ finish_pvpn() {
 !
 
 #additional ipsec first time run work
-      if [ -z $IPSECINSTALLED ]; then
-
+      if [ -z "$IPSECINSTALLED" ]; then
+        echo "ipsecinstalled is ${IPSECINSTALLED}"
 # set iptables for ipsec
         IPSEC_RULES=$(iptables -nL -t nat|grep  10.100.100.0 -m -1 | awk '{print $4}')
         if [ -n "$IPSEC_RULES" ]; then
@@ -420,7 +433,7 @@ finish_pvpn() {
     if [ "strongswan" != "$VPN_TYPE" ]; then
 #ovpn first time run work start
 #do ovpn finishing stuff here
-      if [ -z $OVPNINSTALLED ]; then
+      if [ -z "$OVPNINSTALLED" ]; then
         TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
 #      echo "TAP_RULES is ${TAP_RULES}"
 #      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
@@ -437,7 +450,7 @@ finish_pvpn() {
       fi
     fi
 #end ofovpn first time run work
-    if [ -z $PVPNINSTALLED ]; then
+    if [ -z "$PVPNINSTALLED" ]; then
 
 #both type need to setup iptables restore in rc.local
       echo "Now setup iptables restore in rc.local and finishing VPN server setup"
@@ -534,7 +547,7 @@ InitPKI_buildCA() {
   else
     echo "Initial ipsec pki and build CA now"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --flag serverAuth--in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
     echo "CA key and CA cert generated"
 
   fi
