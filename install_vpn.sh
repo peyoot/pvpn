@@ -365,89 +365,106 @@ finish_pvpn() {
         echo "strongswan already have dns in config file"
       fi
 !
-      echo "restart ipsec"
-# set iptables for ipsec
-      IPSEC_RULES=$(iptables -nL -t nat|grep  10.100.100.0 -m -1 | awk '{print $4}')
-      if [ -n "$IPSEC_RULES" ]; then
-          echo "ipsec iptables rule exist"
-        if prompt-yesno "would you like to remove iptables" "no" ; then
-           echo "removing ipsec iptables rules"
-           iptables -t nat -D POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
-           iptables-save > /etc/iptables.rules
-        else
-           echo "keep ipsec itable rules"
-        fi
-      else
-        echo "choose to set iptables rule for ipsec"
-        if prompt-yesno "would you like to set ipsec iptables rules so that client may use tunnel to access internet" "yes" ; then
-           echo "set ipsec iptables rules"
-           iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
-           iptables-save > /etc/iptables.rules
-        else
-           echo "keep ipsec iptables rules untapped"
-        fi
-      fi
 
-      if [ "yes" = "$VIRTUALIP" ]; then
-        SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
-        if [ -n "$SERVER_VIRTUALIP" ]; then
-          echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
+#additional ipsec first time run work
+      if [ -z $IPSECINSTALLED ]; then
+
+# set iptables for ipsec
+        IPSEC_RULES=$(iptables -nL -t nat|grep  10.100.100.0 -m -1 | awk '{print $4}')
+        if [ -n "$IPSEC_RULES" ]; then
+            echo "ipsec iptables rule exist"
+          if prompt-yesno "would you like to remove iptables" "no" ; then
+             echo "removing ipsec iptables rules"
+             iptables -t nat -D POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
+             iptables-save > /etc/iptables.rules
+          else
+             echo "keep ipsec itable rules"
+          fi
         else
-          echo "set VPN server ip as 10.100.100.254" 
-          ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
+          echo "choose to set iptables rule for ipsec"
+          if prompt-yesno "would you like to set ipsec iptables rules so that client may use tunnel to access internet" "yes" ; then
+             echo "set ipsec iptables rules"
+             iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
+             iptables-save > /etc/iptables.rules
+          else
+             echo "keep ipsec iptables rules untapped"
+          fi
         fi
-      fi
+
+        if [ "yes" = "$VIRTUALIP" ]; then
+          SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
+          if [ -n "$SERVER_VIRTUALIP" ]; then
+            echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
+          else
+            echo "set VPN server ip as 10.100.100.254" 
+            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
+          fi
+        fi
 #disable cloud server keep alive
-      if prompt-yesno "Do you use cloud server which ethernet interface didn't bind the public IP by default? You may want to disable keep alive in server" "yes" ; then
-        if [ "$(grep -c keep_alive /etc/strongswan.conf)" = "0" ]; then
-           sed -i "/plugins/i\ \t\keep_alive = 0" /etc/strongswan.conf 
-        else
-           echo "keep_alive already set"
+        if prompt-yesno "Do you use cloud server which ethernet interface didn't bind the public IP by default? You may want to disable keep alive in server" "yes" ; then
+          if [ "$(grep -c keep_alive /etc/strongswan.conf)" = "0" ]; then
+             sed -i "/plugins/i\ \t\keep_alive = 0" /etc/strongswan.conf 
+          else
+             echo "keep_alive already set"
+          fi
         fi
-      fi
+      
 #end of disable cloud server  keep alive
+        echo "ipsec installed" > /var/log/pvpn_install.log
+      fi
+#end of first tim run  work
+
       echo "restart  ipsec "
       ipsec restart
     fi
     if [ "strongswan" != "$VPN_TYPE" ]; then
+#ovpn first time run work start
 #do ovpn finishing stuff here
-      TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
+      if [ -z $OVPNINSTALLED ]; then
+        TAP_RULES=$(iptables -nvL|grep tap0 -m 1 | awk '{print $6}')
 #      echo "TAP_RULES is ${TAP_RULES}"
 #      VIRTUALIP_RULES=$(iptables -nL|grep 10.10.100.0 -m 1 | awk '{print $5}')
-      if [ -n "$TAP_RULES" ]; then
-        echo "tap0 iptables rule exist"
-      else
-        echo "set iptables rule for openvpn"
-        iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.100.101.0/24 -m conntrack --ctstate NEW -j ACCEPT
-        iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-        iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.101.0/24 -j MASQUERADE
-        iptables-save > /etc/iptables.rules
+        if [ -n "$TAP_RULES" ]; then
+          echo "tap0 iptables rule exist"
+        else
+          echo "set iptables rule for openvpn"
+          iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.100.101.0/24 -m conntrack --ctstate NEW -j ACCEPT
+          iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+          iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.101.0/24 -j MASQUERADE
+          iptables-save > /etc/iptables.rules
+        fi
+        echo "openvpn installed" > /var/log/pvpn_install.log
       fi
     fi
-#both type need to setup iptables restore in rc.local
-    echo "Now setup iptables restore in rc.local and finishing VPN server setup"
-    echo 1 > /proc/sys/net/ipv4/ip_forward
-    sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-####add iptables restore to rc.local service####
-    if [ -n /etc/systemd/system/rc-local.service ]; then
-      ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-    fi
-    cat /etc/systemd/system/rc-local.service |grep Install
-    if [ $? -eq 0 ]; then
-      echo "you've setup rc.local service already, please manually check if you've configure iptables-restore there"
-    else
-      echo "Install rc.local service for pvpn iptables restore"
-      echo "" >> /etc/systemd/system/rc-local.service
-      echo "[Install]" >> /etc/systemd/system/rc-local.service
-      echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
-      echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
-      touch  /etc/rc.local
-      echo "#!/bin/bash" >> /etc/rc.local
-      echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local
-      chmod a+x /etc/rc.local 
-      echo "service to restore iptables rules after reboot is set"
-    fi
+#end ofovpn first time run work
+    if [ -z $PVPNINSTALLED ]; then
 
+#both type need to setup iptables restore in rc.local
+      echo "Now setup iptables restore in rc.local and finishing VPN server setup"
+      echo 1 > /proc/sys/net/ipv4/ip_forward
+      sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+####add iptables restore to rc.local service####
+      if [ -n /etc/systemd/system/rc-local.service ]; then
+        ln -fs /lib/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+      fi
+      cat /etc/systemd/system/rc-local.service |grep Install
+      if [ $? -eq 0 ]; then
+        echo "you've setup rc.local service already, please manually check if you've configure iptables-restore there"
+      else
+        echo "Install rc.local service for pvpn iptables restore"
+        echo "" >> /etc/systemd/system/rc-local.service
+        echo "[Install]" >> /etc/systemd/system/rc-local.service
+        echo "WantedBy=multi-user.target" >> /etc/systemd/system/rc-local.service
+        echo "Alias=rc-local.service" >> /etc/systemd/system/rc-local.service
+        touch  /etc/rc.local
+        echo "#!/bin/bash" >> /etc/rc.local
+        echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local
+        chmod a+x /etc/rc.local 
+        echo "service to restore iptables rules after reboot is set"
+        echo "pvpn installed" > /var/log/pvpn_install.log
+      fi
+      echo "pvpn have installed an configured as what you specified"
+    fi
   else
     echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
     if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
@@ -517,7 +534,7 @@ InitPKI_buildCA() {
   else
     echo "Initial ipsec pki and build CA now"
     ipsec pki --gen --outform pem > /etc/ipsec.d/private/cakey.pem
-    ipsec pki --self --in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
+    ipsec pki --self --flag serverAuth--in /etc/ipsec.d/private/cakey.pem --dn "C=CN,O=Palfort,CN=PVPN CA" --ca --outform pem > /etc/ipsec.d/cacerts/cacert.pem
     echo "CA key and CA cert generated"
 
   fi
