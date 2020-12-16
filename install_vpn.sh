@@ -405,12 +405,17 @@ finish_pvpn() {
         fi
 
         if [ "yes" = "$VIRTUALIP" ]; then
-          SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
-          if [ -n "$SERVER_VIRTUALIP" ]; then
-            echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
+          if prompt-yesno "would you like to set server additional IP from virtual IP pool?" "no" ; then
+
+            SERVER_VIRTUALIP=$(ip addr |grep 10.100.100.254 | awk '{print $2}'|cut -d'/' -f 1)
+            if [ -n "$SERVER_VIRTUALIP" ]; then
+              echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
+            else
+              echo "set VPN server ip as 10.100.100.254" 
+              ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
+            fi
           else
-            echo "set VPN server ip as 10.100.100.254" 
-            ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
+            echo "Server will not have an additonal IP address from virtual IP pool"
           fi
         fi
 #disable cloud server keep alive
