@@ -428,7 +428,7 @@ finish_pvpn() {
         fi
       
 #end of disable cloud server  keep alive
-        echo "ipsecinstalled" > /var/log/pvpn_install.log
+        echo "ipsecinstalled" >> /var/log/pvpn_install.log
       fi
 #end of first tim run  work
 
@@ -451,7 +451,7 @@ finish_pvpn() {
           iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.101.0/24 -j MASQUERADE
           iptables-save > /etc/iptables.rules
         fi
-        echo "openvpninstalled" > /var/log/pvpn_install.log
+        echo "openvpninstalled" >> /var/log/pvpn_install.log
       fi
     fi
 #end ofovpn first time run work
@@ -479,7 +479,7 @@ finish_pvpn() {
         echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local
         chmod a+x /etc/rc.local 
         echo "service to restore iptables rules after reboot is set"
-        echo "pvpninstalled" > /var/log/pvpn_install.log
+        echo "pvpninstalled" >> /var/log/pvpn_install.log
       fi
       echo "pvpn have installed an configured as what you specified"
     fi
