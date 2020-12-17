@@ -493,9 +493,9 @@ finish_pvpn() {
         echo "iptables-restore < /etc/iptables.rules" >> /etc/rc.local
         chmod a+x /etc/rc.local 
         echo "service to restore iptables rules after reboot is set"
-        echo "pvpninstalled" >> /var/log/pvpn_install.log
       fi
       echo "pvpn have installed an configured as what you specified"
+      echo "pvpninstalled" >> /var/log/pvpn_install.log
     fi
   else
     echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
