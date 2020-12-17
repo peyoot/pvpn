@@ -470,7 +470,7 @@ finish_pvpn() {
          else
             CHECKFORWARD=$(cat /etc/sysctl.conf |grep "net.ipv4.ip_forward=0")
             if [ -z "$CHECKFORWARD" ]; then
-                sed -i '/net.ipv4.ip_forward/ s/\(.*= \).*/\11/' /etc/sysctl.conf
+              sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
             fi
          fi
       fi
