@@ -466,12 +466,12 @@ finish_pvpn() {
       else
          CHECKFORWARD=$(cat /etc/sysctl.conf |grep "#net.ipv4.ip_forward=")
          if [ -z "$CHECKFORWARD" ]; then
-            sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-         else
             CHECKFORWARD=$(cat /etc/sysctl.conf |grep "net.ipv4.ip_forward=0")
-            if [ -z "$CHECKFORWARD" ]; then
+            if [ -n "$CHECKFORWARD" ]; then
               sed -i "s/^net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/" /etc/sysctl.conf
             fi
+         else
+            sed -i "s/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/" /etc/sysctl.conf
          fi
       fi
 
