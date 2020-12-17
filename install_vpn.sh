@@ -159,10 +159,10 @@ prepare_installation_paras() {
 #record install log
 if [ -z /var/log/pvpn_install.log ]; then
   echo "Install script first time run at:" |tee /var/log/pvpn_install.log
-  date | tee -a /var/log/pvpn_install.log
+  date |tee -a /var/log/pvpn_install.log
 else
-  echo "Install script run again at:" | tee -a /var/log/pvpn_install.log
-  date | gee -a /var/log/pvpn_install.log
+  echo "Install script run again at:" |tee -a /var/log/pvpn_install.log
+  date |tee -a /var/log/pvpn_install.log
 fi
 
 
