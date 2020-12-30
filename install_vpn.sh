@@ -605,7 +605,7 @@ generate_certs() {
     fi
     echo "Scripts will help you generate client certs"
     echo "By default client.key and client.crt will be generated!."
-    if [ -e ./pki/private/client.crt ]; then
+    if [ -e ./pki/issued/client.crt ]; then
       if prompt-yesno "client cert already exist, generate a new one?" "no" ; then
           CLIENT_USER=$(prompt "Please input the username of client, use client- as prefix. It will keep original one and generate a new user cert:" "client")
       else
@@ -855,8 +855,8 @@ openvpn_config() {
     echo "You'll configure opevpn server mode"
     cd /etc/openvpn/easyrsa
     echo "Now in /etc/openvpn/easyrsa"
-    if  [ -e /etc/openvpn/ca.crt ]; then
-      if [ -e /etc/openvpn/ca.key ]; then
+    if  [ -e /etc/openvpn/easyrsa/pki/ca.crt ]; then
+      if [ -e /etc/openvpn/easyrsa/pki/private/ca.key ]; then
         if prompt-yesno "You've got a CA on PKI. Would you like to use it?" "yes" ; then
           echo "use current CA"
           NEEDPKICA="no"
