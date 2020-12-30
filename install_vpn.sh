@@ -765,18 +765,18 @@ ovpnclient_for_win() {
     echo "accept = 127.0.0.1:11000" >> /tmp/openvpn/stunnel.conf
     echo "connect = ${SERVER_URL}:8443" >> /tmp/openvpn/stunnel.conf
 #configure openvpn client for windows
-    echo -n "" > /tmp/openvpn/client.ovpn
-    echo "client" >> /tmp/openvpn/client.ovpn
-    echo "proto tcp" >> /tmp/openvpn/client.ovpn
-    echo "dev ${OVPN_INTERFACE}" >> /tmp/openvpn/client.ovpn
-    echo "ca ca.crt" >> /tmp/openvpn/client.ovpn
-    echo "cert ${CLIENT_USER}.crt" >> /tmp/openvpn/client.ovpn
-    echo "key ${CLIENT_USER}.key" >> /tmp/openvpn/client.ovpn
-    echo "remote 127.0.0.1 11000" >> /tmp/openvpn/client.ovpn
-    echo "resolv-retry infinite" >> /tmp/openvpn/client.ovpn
-    echo "dhcp-option DNS 1.1.1.1" >> /tmp/openvpn/client.ovpn
-    echo "nobind" >> /tmp/openvpn/client.ovpn
-    echo "${OVPN_COMPRESS}" >> /tmp/openvpn/client.ovpn
+    echo -n "" > /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "client" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "proto tcp" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "dev ${OVPN_INTERFACE}" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "ca ca.crt" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "cert ${CLIENT_USER}.crt" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "key ${CLIENT_USER}.key" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "remote 127.0.0.1 11000" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "resolv-retry infinite" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "dhcp-option DNS 1.1.1.1" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "nobind" >> /tmp/openvpn/${CLIENT_USER}.ovpn
+    echo "${OVPN_COMPRESS}" >> /tmp/openvpn/${CLIENT_USER}.ovpn
 }
 
 ipsecclient_from_server() {
