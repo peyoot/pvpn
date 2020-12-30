@@ -511,8 +511,9 @@ finish_pvpn() {
       fi
       if [ "strongswan" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-        wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-clientcerts.zip --user pvpn --password download
-        unzip -o pvpn-openvpn-clientcerts.zip -x client.ovpn -d /etc/openvpn/
+        CLIENT_USER=$(prompt "Please input the client username:" "client")
+        wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip --user pvpn --password download
+        unzip -o pvpn-openvpn-${CLIENT_USER}certs.zip -x ${CLIENT_USER}.ovpn -d /etc/openvpn/
       fi
       sleep 1
       echo "your vpn client have been installed and is ready for your usage."
