@@ -511,7 +511,7 @@ finish_pvpn() {
       fi
       if [ "strongswan" != "$VPN_TYPE" ]; then
         echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-        CLIENT_USER=$(prompt "Please input the client username:" "client")
+#
         wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip --user pvpn --password download
         unzip -o pvpn-openvpn-${CLIENT_USER}certs.zip -x ${CLIENT_USER}.ovpn -d /etc/openvpn/
       fi
@@ -943,6 +943,7 @@ ovpn_config_file() {
     echo "accept = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
+    CLIENT_USER=$(prompt "Please input the client username:" "client")
     echo -n "" > $OVPN_CONFIG_CDIR/client.conf
     echo "client" >> $OVPN_CONFIG_CDIR/client.conf
     echo "proto tcp" >> $OVPN_CONFIG_CDIR/client.conf
