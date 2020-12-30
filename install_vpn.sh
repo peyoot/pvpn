@@ -556,7 +556,7 @@ InitPKI_buildCA() {
     if [ ! -e /etc/openvpn/easyrsa/vars ] ; then
       mv vars.example vars
     fi
-    if prompt-yesno "Default key size is 2048 bit. Would you like to change to 1024 bit for quicker access?" "yes" ; then
+    if prompt-yesno "Default key size is 2048 bit. Would you like to change to 1024 bit for quicker access?" "no" ; then
       echo "set_var EASYRSA_KEY_SIZE 1024" >> /etc/openvpn/easyrsa/vars
     fi
     echo "about to build CA"
