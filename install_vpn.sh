@@ -557,7 +557,7 @@ InitPKI_buildCA() {
     if [ ! -e /etc/openvpn/easyrsa/vars ] ; then
       mv vars.example vars
     fi
-    if prompt-yesno "Default key size is 2048 bit. Would you like to change to 1024 bit for quicker access?" "no" ; then
+    if prompt-yesno "Default key size is 2048 bit. Change to 1024 bit for quicker access with legacy ubuntu before 18.04?" "no" ; then
       echo "set_var EASYRSA_KEY_SIZE 1024" >> /etc/openvpn/easyrsa/vars
     fi
     echo "about to build CA"
@@ -1134,7 +1134,7 @@ else
       echo "  auto=add" >> /etc/ipsec.conf
       echo "conn local-net" >> /etc/ipsec.conf
       echo "  leftsubnet=${CLIENT_LSUBNET}" >> /etc/ipsec.conf
-      echo "  rightsubnet=${CLIENT_LSUBNET},${SERVER_URL}/32" >> /etc/ipsec.conf
+      echo "  rightsubnet=${CLIENT_LSUBNET}" >> /etc/ipsec.conf
       echo "  authby=never" >> /etc/ipsec.conf
       echo "  type=pass" >> /etc/ipsec.conf
       echo "  auto=route" >> /etc/ipsec.conf 
@@ -1258,7 +1258,7 @@ openvpn_install()  {
 
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
-EASYRSA_VERSION="3.0.7"
+EASYRSA_VERSION="3.0.8"
 check_root
 handle_args "$@"
 set_umask
