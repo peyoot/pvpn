@@ -396,7 +396,7 @@ finish_pvpn() {
         else
           echo "choose to set iptables rule for ipsec"
           if prompt-yesno "would you like to set ipsec iptables rules so that client may use tunnel to access internet" "yes" ; then
-             echo "set ipsec iptables rules"
+             echo "set ipsec iptables rules" |tee -a /var/log/pvpn_install.log
              iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.100.0/24 -j MASQUERADE
              iptables-save > /etc/iptables.rules
           else
@@ -411,7 +411,7 @@ finish_pvpn() {
             if [ -n "$SERVER_VIRTUALIP" ]; then
               echo "VPN server have already set an IP ${SERVER_VIRTUALIP}"
             else
-              echo "set VPN server ip as 10.100.100.254" 
+              echo "set VPN server ip as 10.100.100.254" |tee -a /var/log/pvpn_install.log
               ip addr add 10.100.100.254/24 dev ${NETINTERFACE}
             fi
           else
@@ -421,6 +421,7 @@ finish_pvpn() {
 #disable cloud server keep alive
         if prompt-yesno "Do you use cloud server which ethernet interface didn't bind the public IP by default? You may want to disable keep alive in server" "yes" ; then
           if [ "$(grep -c keep_alive /etc/strongswan.conf)" = "0" ]; then
+             echo "set keep_alive=0 in strongswan.conf for this cloud vps" |tee -a /var/log/pvpn_install.log
              sed -i "/plugins/i\ \t\keep_alive = 0" /etc/strongswan.conf 
           else
              echo "keep_alive already set"
@@ -445,7 +446,7 @@ finish_pvpn() {
         if [ -n "$TAP_RULES" ]; then
           echo "tap0 iptables rule exist"
         else
-          echo "set iptables rule for openvpn"
+          echo "set iptables rule for openvpn" |tee -a /var/log/pvpn_install.log
           iptables -A FORWARD -i ${OVPN_INTERFACE}0 -o ${NETINTERFACE} -s 10.100.101.0/24 -m conntrack --ctstate NEW -j ACCEPT
           iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
           iptables -t nat -A POSTROUTING -o ${NETINTERFACE} -s 10.100.101.0/24 -j MASQUERADE
