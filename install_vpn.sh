@@ -621,7 +621,7 @@ generate_certs() {
 
 
     if prompt-yesno "you've generated a client cert. Do you want to pack all client certs stuff for easy downloading" "yes" ; then
-      echo "copy ca and client key,cert to /tmp/openvpn and zip it there""
+      echo "copy ca and client key,cert to /tmp/openvpn and zip it there"
       mkdir -p /tmp/openvpn
       cp  ./pki/ca.crt ./pki/private/${CLIENT_USER}.key ./pki/issued/${CLIENT_USER}.crt  /tmp/openvpn/
       chmod a+r /tmp/openvpn/*
