@@ -520,8 +520,11 @@ finish_pvpn() {
       echo "your vpn client have been installed and is ready for your usage."
       rm -rf pvpn*.zip
     else
-      echo "To start the VPN service please download the client certs from http://${SERVER_URL}:8000/pvpn/,You also need to put it in the right place"
+      echo "To start the VPN service please download the client certs and put it in the right place"
+      echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
     fi
+      echo "In ubuntu 18.04/20.04  you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
+      echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
   fi
 }
 
@@ -990,19 +993,15 @@ ovpn_config_file() {
 
     if prompt-yesno "would you like to auto start openvpn client service" "no" ; then
       systemctl enable $OVPN_CSERVICE
-      echo "You've enable openvpn client service after boot.with the default configured feature,all trafic will go via vpn server"
-      echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
+      echo "You've enable openvpn client service after boot. All trafic will go via vpn server by default configuration. "
     else
       systemctl disable $OVPN_CSERVICE
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
-      echo "when you start the VPN service, all trafic will go via vpn server as default route"
+      echo "when you start the VPN service, all trafic will go via vpn server as default route as part of default configuration"
     fi 
     systemctl restart stunnel4
 #    /etc/init.d/stunnel4 start
-    echo "please put your ca/client certs into /etc/openvpn/ before you can use the openvpn client service"
-    echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
-    echo "In ubuntu 18.04/20.04  you can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
-    echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
+    echo "client configuration have been generated. you still need CA and certs in right place to start the openvpn client service. You can let scripts autodownload later"
   fi
 }
 
@@ -1035,7 +1034,7 @@ if [ "server" = "$VPN_MODE" ] ; then
       echo "  left=%any" >> /etc/ipsec.conf
       echo "  leftsubnet=0.0.0.0/0" >> /etc/ipsec.conf
       echo "  leftcert=servercert.pem" >> /etc/ipsec.conf
-      echo "  leftid=@server" >> /etc/ipsec.conf
+      echo "  leftid=@server" >> /etc/ipsec.conf+
       echo "  # leftfirewall=yes" >> /etc/ipsec.conf
       echo "# IOS or android can use ikev1 and xauth psk" >> /etc/ipsec.conf
       echo "conn ikev1_psk_xauth" >> /etc/ipsec.conf
