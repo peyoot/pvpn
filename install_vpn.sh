@@ -885,49 +885,73 @@ openvpn_config() {
 
 
 ovpn_config_file() {
-
   if [ "server" = "$VPN_MODE" ] ; then
+    echo "checking current config file"
+    if [ -e /etc/stunnel/stunnel.conf ]; then
+      if prompt-yesno "you've got a stunnel.conf,overwrite it?" "yes" ; then
+        echo "Scripts will remove stunnel and openvpn config file first. "
+        rm -rf /etc/stunnel/stunnel.conf
+        KEEPSTUNNEL="no"
+      else
+        KEEPSTUNNEL="yes"
+      fi
+    fi
+
 #configure stunnel server here
-    echo "Scripts will remove stunnel and openvpn config file first. " 
-    rm -rf /etc/stunnel/stunnel.conf
-    rm -rf $OVPN_CONFIG_SDIR/server.conf
-    echo -n "" > /etc/stunnel/stunnel.conf
+    if [ "$KEEPSTUNNEL" = "no" ]; then
+      echo -n "" > /etc/stunnel/stunnel.conf
 #   fetch_server_auth
-    echo "cert=/etc/stunnel/server.p12" >> /etc/stunnel/stunnel.conf
-    echo "client=no" >> /etc/stunnel.conf
-    echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
-    echo "accept = 8443" >> /etc/stunnel/stunnel.conf
-    echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+      echo "cert=/etc/stunnel/server.p12" >> /etc/stunnel/stunnel.conf
+      echo "client=no" >> /etc/stunnel.conf
+      echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
+      echo "accept = 8443" >> /etc/stunnel/stunnel.conf
+      echo "connect = 127.0.0.1:11000" >> /etc/stunnel/stunnel.conf
+    else
+      echo "you've chosen to keep stunnel.con"
+    fi
 #configure openvpn server here
-    echo -n "" > $OVPN_CONFIG_SDIR/server.conf
-    echo "port 11000" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "proto tcp" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "cert /etc/openvpn/server.crt" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "key /etc/openvpn/server.key" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "dh /etc/openvpn/dh.pem" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "server 10.100.101.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"dhcp-option DNS 8.8.8.8\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "keepalive 10 120" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "max-clients 10" >>$OVPN_CONFIG_SDIR/server.conf
-    echo ";user nobody" >> $OVPN_CONFIG_SDIR/server.conf
-    echo ";group nogroup" >> $OVPN_CONFIG_SDIR/server.conf
-    echo ";persist-key" >> $OVPN_CONFIG_SDIR/server.conf
-    echo ";persist-tun" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "status $OVPN_LOG_DIR/openvpn-status.log" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "verb 3" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "mute 20" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "# explicit-exit-notify 1" >> $OVPN_CONFIG_SDIR/server.conf
-    echo "openVPN server configuration finished"
+    if [ -e ${OVPN_CONFIG_SDIR}/server.conf ]; then
+      if prompt-yesno "you've got a openvpn-server config file, overwrite it?" "yes" ; then
+        rm -rf $OVPN_CONFIG_SDIR/server.conf
+        KEEPOVPN_SCONFIG="no"
+      else
+        KEEPOVPN_SCONFIG="yes"
+      fi
+    fi
+    if [ "$KEEPOVPN_SCONFIG" = "no" ]; then
+      echo -n "" > $OVPN_CONFIG_SDIR/server.conf
+      echo "port 11000" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "proto tcp" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "cert /etc/openvpn/server.crt" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "key /etc/openvpn/server.key" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "dh /etc/openvpn/dh.pem" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "server 10.100.101.0 255.255.255.0" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "ifconfig-pool-persist $OVPN_LOG_DIR/ipp.txt" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "push \"redirect-gateway def1 bypass-dhcp\"" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "push \"dhcp-option DNS 1.1.1.1\"" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "push \"dhcp-option DNS 8.8.8.8\"" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "push \"route ${SERVER_URL} 255.255.255.255 net_gateway\"" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "client-to-client" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "duplicate-cn" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "keepalive 10 120" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "max-clients 10" >>$OVPN_CONFIG_SDIR/server.conf
+      echo ";user nobody" >> $OVPN_CONFIG_SDIR/server.conf
+      echo ";group nogroup" >> $OVPN_CONFIG_SDIR/server.conf
+      echo ";persist-key" >> $OVPN_CONFIG_SDIR/server.conf
+      echo ";persist-tun" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "status $OVPN_LOG_DIR/openvpn-status.log" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "verb 3" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "mute 20" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "# explicit-exit-notify 1" >> $OVPN_CONFIG_SDIR/server.conf
+      echo "openVPN server configuration finished"
+    else
+      echo "You've chosen to keep openvpn-server config file"
+    fi
+
     if prompt-yesno "would you like to start the openvpn server after boot" "yes"; then
       systemctl enable $OVPN_SSERVICE
       systemctl start $OVPN_SSERVICE
