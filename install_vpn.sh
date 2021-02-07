@@ -206,7 +206,7 @@ CLIENT_USER="client"
 NEED_SCERT="yes"
 MANUALLY_DOWNLOAD="no"
 KEEP_IPSEC_CONFIG="no"
-KEEPSTUNNEL="0"
+KEEPSTUNNEL="no"
 KEEPOVPN_SCONFIG="no"
 #USE_DEFAULTS is a parameter for palfort vpn only. If you try to install your own VPN system, just dont use it.
 if [ "yes" = "$USE_DEFAULTS" ] ; then
@@ -255,7 +255,7 @@ else
     echo "2. Install Strongswan only and use ipsec PKI tool"
     echo "3. Install both strongswan and openvpn, use ipsec PKI tool "
     echo ""
-    CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "2")
+    CHOSEN_VPN_TYPE=$(prompt-numeric "Please choose which vpn type you're about to install?" "3")
   fi
   if [ "1" = "$CHOSEN_VPN_TYPE" ]; then
     echo "Select openvpn over stunnel" | tee -a /var/log/pvpn_install.log
