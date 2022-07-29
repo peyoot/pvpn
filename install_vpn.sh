@@ -172,6 +172,7 @@ ARR_E+=("14.04")
 ARR_E+=("16.04")
 ARR_N+=("18.04")
 ARR_N+=("20.04")
+ARR_N+=("22.04")
 
 if [[ "${ARR_E[@]}" =~ "$UBUNTU_VERSION" ]]; then
     OVPN_CONFIG_SDIR="/etc/openvpn"
@@ -191,7 +192,14 @@ elif [[ "${ARR_N[@]}" =~ "$UBUNTU_VERSION" ]]; then
     DNS_UPDATER="update-systemd-resolved"
 else 
     if prompt-yesno "This script only verified in ubuntu. Please do not try it in non-debian distribution!Contine?" no; then 
-        echo "only ubuntu are verified. Take your own risk to try it in other version"
+        echo "only ubuntu are verified. Take your own risk to try it in other version! Type yes to continue"
+        OVPN_CONFIG_SDIR="/etc/openvpn/server"
+        OVPN_SSERVICE="openvpn-server@server"
+        OVPN_CONFIG_CDIR="/etc/openvpn/client"
+        OVPN_CSERVICE="openvpn-client@client"
+        OVPN_COMPRESS="compress lz4-v2"
+        OVPN_LOG_DIR="/var/log/openvpn"
+        DNS_UPDATER="update-systemd-resolved"
     else
         echo "pvpn installation aborted"
         exit 1
@@ -974,28 +982,28 @@ ovpn_config_file() {
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
     CLIENT_USER=$(prompt "Please input the client username:" "client")
-    echo -n "" > $OVPN_CONFIG_CDIR/client.conf
-    echo "client" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "proto tcp" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "cert /etc/openvpn/${CLIENT_USER}.crt" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "key /etc/openvpn/${CLIENT_USER}.key" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "resolv-retry infinite" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "nobind" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_CDIR/client.conf
-    echo ";user nobody" >> $OVPN_CONFIG_CDIR/client.conf
-    echo ";group nobody" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "persist-key" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "persist-tun" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "mute 20" >> $OVPN_CONFIG_CDIR/client.conf
+    echo -n "" > $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "client" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "proto tcp" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "dev ${OVPN_INTERFACE}" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "ca /etc/openvpn/ca.crt" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "cert /etc/openvpn/${CLIENT_USER}.crt" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "key /etc/openvpn/${CLIENT_USER}.key" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "remote 127.0.0.1 11000" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "resolv-retry infinite" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "nobind" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "$OVPN_COMPRESS" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo ";user nobody" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo ";group nobody" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "persist-key" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "persist-tun" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "mute 20" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
     echo "prepare scripts to auto setup routes that need to go via local gateway"
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.up
     rm -rf $OVPN_CONFIG_CDIR/nonvpn-routes.down
-    echo "script-security 2" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "up /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
-    echo "down /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/client.conf
+    echo "script-security 2" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "up /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
+    echo "down /etc/openvpn/${DNS_UPDATER}" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
     echo -n "" > $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "#!/bin/bash" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "echo \"set routes for VPNserver and some local IPs that will go via local gateway\"" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
