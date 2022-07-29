@@ -974,7 +974,8 @@ ovpn_config_file() {
     echo "you'll configure stunnel4 and openvpn client mode now"
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
     rm -rf /etc/stunnel/stunnel.conf
-    rm -rf $OVPN_CONFIG_CDIR/server.conf
+    rm -rf $OVPN_CONFIG_CDIR/ca.*
+    rm -rf $OVPN_CONFIG_CDIR/client.*
     echo "configuring stunnel.conf"
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
@@ -1271,7 +1272,7 @@ openvpn_install()  {
     echo "you'll use stongswan PKI in openvpn."
   fi
   if [ "client" = "$VPN_MODE" ]; then
-    echo "Now try to install openvpn-dns-scripts for 18.04 "
+    echo "Now try to install openvpn dns scripts "
     apt install openvpn-systemd-resolved -y
   fi
 
