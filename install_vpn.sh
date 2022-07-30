@@ -975,7 +975,6 @@ ovpn_config_file() {
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf $OVPN_CONFIG_CDIR/ca.*
-    rm -rf $OVPN_CONFIG_CDIR/client.*
     echo "configuring stunnel.conf"
     echo "[openvpn-localhost]" >> /etc/stunnel/stunnel.conf
     echo "client=yes" >> /etc/stunnel/stunnel.conf
@@ -983,6 +982,7 @@ ovpn_config_file() {
     echo "connect = ${SERVER_URL}:8443" >> /etc/stunnel/stunnel.conf
     echo "configuring openvpn client"
     CLIENT_USER=$(prompt "Please input the client username:" "client")
+    rm -rf $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
     echo -n "" > $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
     echo "client" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
     echo "proto tcp" >> $OVPN_CONFIG_CDIR/${CLIENT_USER}.conf
@@ -1293,7 +1293,7 @@ openvpn_install()  {
 
 #To install VPN server or VPN client. Generally VPN server have a public IP and it will work as a responder, while VPN client will act as initiator.
 #VPN server can also set up CA system or use an exist one. 
-EASYRSA_VERSION="3.0.8"
+EASYRSA_VERSION="3.1.0"
 check_root
 handle_args "$@"
 set_umask
