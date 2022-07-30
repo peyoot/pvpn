@@ -567,11 +567,11 @@ InitPKI_buildCA() {
     ./easyrsa init-pki
     sleep 3
     echo "Easyrsa PKI initialed" 
-    if [ ! -e /etc/openvpn/easyrsa/vars ] ; then
-      mv vars.example vars
+    if [ ! -e /etc/openvpn/easyrsa/pki/vars ] ; then
+      mv pki/vars.example pki/vars
     fi
     if prompt-yesno "Default key size is 2048 bit. Change to 1024 bit for quicker access with legacy ubuntu before 18.04?" "no" ; then
-      echo "set_var EASYRSA_KEY_SIZE 1024" >> /etc/openvpn/easyrsa/vars
+      echo "set_var EASYRSA_KEY_SIZE 1024" >> /etc/openvpn/easyrsa/pki/vars
     fi
     echo "about to build CA"
     ./easyrsa build-ca nopass
