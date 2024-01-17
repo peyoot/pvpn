@@ -206,11 +206,11 @@ fi
 }
 
 confirm_install() {
-  echo "sctips assume you have installed the necessary packaes: zip,gawk"
+  echo "sctips assume you have installed the necessary packaes: unzip,gawk"
   echo "pvpn in DEY by default only work as vpn client"
   echo "check the availability of zip"
-  if [ ! -e /usr/bin/zip ]; then
-     echo "your system doesn't have zip, please add it in firmware"
+  if [ ! -e /usr/bin/unzip ]; then
+     echo "your system doesn't have unzip, please add it into firmware"
      exit 1
   fi
 
