@@ -171,9 +171,10 @@ DEY_VERSION="$(cat /etc/build |grep DISTRO_VERSION | awk '{print $3}')"
 ARR_N+=("4.0-r4")
 
 if [[ "${ARR_N[@]}" =~ "$DEY_VERSION" ]]; then
-  OVPN_CONFIG_SDIR="/etc/openvpn/server"
-  OVPN_SSERVICE="openvpn-server@server"
+#  OVPN_CONFIG_SDIR="/etc/openvpn/server"
+#  OVPN_SSERVICE="openvpn-server@server"
   OVPN_CONFIG_CDIR="/etc/openvpn/client"
+  mkdir -p ${OVPN_CONFIG_CDIR}
   OVPN_CSERVICE="openvpn-client@client"
   OVPN_COMPRESS="compress lz4-v2"
   OVPN_LOG_DIR="/var/log/openvpn"
@@ -324,16 +325,12 @@ ovpn_config_file() {
     echo "LocalGW=\$(ip route | grep default | awk '{print \$3}')" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "sleep 3"  >>  $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "ip route add 114.114.114.0/24 via \$LocalGW" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
-    echo "ip route add 101.231.59.0/24 via \$LocalGW" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
-    echo "ip route add 104.193.88.0/24 via \$LocalGW" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo "ip route add ${SERVER_URL}/32 via \$LocalGW" >> $OVPN_CONFIG_CDIR/nonvpn-routes.up
     echo -n "" > $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "#!/bin/bash" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "echo \"delete routes for VPNserver and some local IP that need go via local gateway\"" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "sleep 3"  >>  $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "ip route del 114.114.114.0/24" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
-    echo "ip route del 101.231.59.0/24" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
-    echo "ip route del 104.193.88.0/24" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "ip route del ${SERVER_URL}/32" >> $OVPN_CONFIG_CDIR/nonvpn-routes.down
     echo "chmod a+x $OVPN_CONFIG_CDIR/nonvpn-routes.*"
     chmod a+x $OVPN_CONFIG_CDIR/nonvpn-routes.*
