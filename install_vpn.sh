@@ -208,11 +208,17 @@ fi
 confirm_install() {
   echo "sctips assume you have installed the necessary packaes: unzip,gawk"
   echo "pvpn in DEY by default only work as vpn client"
-  echo "check the availability of zip"
+  echo "check the availability of unzip"
   if [ ! -e /usr/bin/unzip ]; then
      echo "your system doesn't have unzip, please add it into firmware"
      exit 1
   fi
+
+  if [ ! -e /usr/bin/awk ]; then
+     echo "your system doesn't have gawk, please add it into firmware"
+     exit 1
+  fi
+
 
   SERVER_URL=$(prompt "Please input the server public IP:" "")
   if [ -z "$SERVER_URL" ]; then
@@ -228,27 +234,13 @@ confirm_install() {
      fi
   fi
 
-  
-  if [ "openvpn" = "$VPN_TYPE" ]; then
-    openvpn_install
-#  elif [ "strongswan" =  "$VPN_TYPE" ]; then
-#    strongswan_install
-  else
-    ipsec_install
-  fi
 }
 
 
 confirm_setting() {
   echo "sctips are about to setup software based on your choise"
-  echo "you've chosen $VPN_TYPE"
-  if [ "openvpn" = "$VPN_TYPE" ]; then
-    openvpn_config
-#  elif [ "strongswan" = "$VPN_TYPE" ]; then
-#    strongswan_config
-  else
-    ipsec_config
-  fi
+  echo "you're about to configure $VPN_TYPE"
+  openvpn_config
 }
 
 finish_pvpn() {
@@ -256,31 +248,31 @@ finish_pvpn() {
   OVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep ovpninstalled)
   PVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep pvpninstalled)
 
-echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
-if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
-  if [ "openvpn" != "$VPN_TYPE" ]; then
-    echo "Scripts now try to download ipsec client certs and config from server"
-    wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip --user pvpn --password download
-    if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
-      unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
-    else
-      unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
+  echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
+  if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
+    if [ "openvpn" != "$VPN_TYPE" ]; then
+      echo "Scripts now try to download ipsec client certs and config from server"
+      wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip --user pvpn --password download
+      if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
+        unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
+      else
+        unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/ -x ipsec.conf ipsec.secrets
+      fi
     fi
+    if [ "strongswan" != "$VPN_TYPE" ]; then
+      echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
+      wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip --user pvpn --password download
+      unzip -o pvpn-openvpn-${CLIENT_USER}certs.zip -x ${CLIENT_USER}.ovpn -d /etc/openvpn/
+    fi
+    sleep 1
+    echo "your vpn client have been installed and is ready for your usage."
+    rm -rf pvpn*.zip
+  else
+    echo "To start the VPN service please download the client certs and put it in the right place"
+    echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
   fi
-  if [ "strongswan" != "$VPN_TYPE" ]; then
-    echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-    wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip --user pvpn --password download
-    unzip -o pvpn-openvpn-${CLIENT_USER}certs.zip -x ${CLIENT_USER}.ovpn -d /etc/openvpn/
-  fi
-  sleep 1
-  echo "your vpn client have been installed and is ready for your usage."
-  rm -rf pvpn*.zip
-else
-  echo "To start the VPN service please download the client certs and put it in the right place"
-  echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
-fi
-echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
-echo "or you can manually start openvpn by input: openvpn /etc/openvpn/client.conf (Ubuntu 16.04) or openvpn /etc/openvpn/client/client.conf (Ubuntu 18.04)"
+  echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
+  echo "or you can manually start openvpn by input: openvpn -f /etc/openvpn/client/client.conf"
 }
 
 
@@ -292,7 +284,7 @@ openvpn_config() {
 
 ovpn_config_file() {
   if [ "client" = "$VPN_MODE" ] ; then
-    echo "you'll configure stunnel4 and openvpn client mode now"
+    echo "you'll configure stunnel and openvpn client mode now"
     echo "Scripts will remove stunnel and openvpn config file first. You can cancel it by typing ctrl+c If you dont want to proceed." 
     rm -rf /etc/stunnel/stunnel.conf
     rm -rf $OVPN_CONFIG_CDIR/ca.*
@@ -354,7 +346,7 @@ ovpn_config_file() {
       echo "Please manually start openvpn client service by typing: systemctl start openvpn-client@client"
       echo "when you start the VPN service, all trafic will go via vpn server as default route as part of default configuration"
     fi 
-    systemctl restart stunnel4
+    systemctl restart stunnel
 #    /etc/init.d/stunnel4 start
     echo "client configuration have been generated. you still need CA and certs in right place to start the openvpn client service. You can let scripts autodownload later"
   fi
@@ -384,10 +376,10 @@ openvpn_install()  {
    fi
   fi
 
-  echo "configure stunnel4 auto-start here"
+  echo "configure stunnel auto-start here"
   if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
-    sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel4
-    echo "stunnel4 autostart enabled"
+    sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel
+    echo "stunnel autostart enabled"
   else
     echo "you need to manual start stunnel service"
   fi
