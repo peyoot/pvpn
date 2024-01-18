@@ -253,7 +253,7 @@ finish_pvpn() {
   if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
     if [ "openvpn" != "$VPN_TYPE" ]; then
       echo "Scripts now try to download ipsec client certs and config from server"
-      wget http://${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip --user pvpn --password download
+      wget http://pvpn:download@${SERVER_URL}:8000/pvpn/pvpn-ipsec-${CLIENT_USER}certs.zip
       if prompt-yesno "Would you like to use client config file generate from server in this download.If your server doesn't bind public IP and you don't know how to config ipsec client. You can try with it" "no" ; then
         unzip -o pvpn-ipsec-${CLIENT_USER}certs.zip -d /etc/
       else
@@ -262,7 +262,8 @@ finish_pvpn() {
     fi
     if [ "strongswan" != "$VPN_TYPE" ]; then
       echo "Scripts now will try to download openvpn client configure from server and extract it into the right place"
-      wget http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip --user pvpn --password download
+      wget http://pvpn:download@${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip
+     #  curl -u pvpn:download http://${SERVER_URL}:8000/pvpn/pvpn-openvpn-${CLIENT_USER}certs.zip -o pvpn-openvpn-${CLIENT_USER}certs.zip
       unzip -o pvpn-openvpn-${CLIENT_USER}certs.zip -x ${CLIENT_USER}.ovpn -d /etc/openvpn/
     fi
     sleep 1
