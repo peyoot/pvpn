@@ -198,6 +198,15 @@ KEEPOVPN_SCONFIG="no"
 VPN_MODE="client"
 VPN_TYPE="openvpn"
 
+if [ -e /usr/bin/stunnel ] ; then
+  echo "Missing stunnel, your firmware probably do not have pvpn correctly installed"
+  exit 1
+fi
+if [ -e /usr/sbin/openvpn ] ; then
+  echo "Missing openvpn, you firmware probably do not have pvpn correctly installed"
+  exit 1
+fi
+
 if prompt-yesno "Woud you like to use tap interface in openvpn?" yes; then
   OVPN_INTERFACE="tap"
 else
@@ -270,10 +279,23 @@ finish_pvpn() {
     echo "To start the VPN service please download the client certs and put it in the right place"
     echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
   fi
+
+  echo "configure stunnel auto-start here"
+  if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
+    systemctl enable stunnel
+    echo "stunnel autostart enabled"
+  else
+    echo "you need to manual start stunnel service: systemctl start stunnel"
+  fi
+
+
+  chmod +x /etc/openvpn/update-systemd-resolved
+  sed -i "s/^#NTP=/NTP=time.windows.com/" /etc/systemd/timesyncd.conf
+
   echo "PVPN INSTALLEED" |tee /var/log/pvpn_install.log
 
   echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
-  echo "or you can manually start openvpn by input: openvpn --daemon -f /etc/openvpn/client/client.conf"
+  echo "or you can manually start openvpn by input: systemctl start openvpn-client@client"
 }
 
 
@@ -350,33 +372,6 @@ ovpn_config_file() {
 }
 
 
-openvpn_install()  {
-#for openvpn sole installation, need to  install easyrsa as well
-#check if openvpn and stunnel have already installed and set flag
-  OVPN_EXIST="no"
-  STUNNEL_EXIST="no"
-  EASYRSA_EXIST="no"
-  if [ -e /etc/stunnel ] ; then
-    echo "configure stunnel auto-start here"
-    if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
-      systemctl enable stunnel
-      echo "stunnel autostart enabled"
-    else
-      echo "you need to manual start stunnel service: systemctl start stunnel"
-    fi
-
-  else
-     echo "Missing stunnel, you probably do not have pvpn correctly installed"
-  fi
-  if [ -e /etc/openvpn ] ; then
-     chmod +x /etc/openvpn/update-systemd-resolved
-     sed -i "s/^#NTP=/NTP=time.windows.com/" /etc/systemd/timesyncd.conf
-
-  else
-     echo "Missing openvpn, you probably do not have pvpn correctly installed"
-  fi
-
-}
 
 
 ##### function block end #####
