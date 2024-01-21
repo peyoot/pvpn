@@ -198,11 +198,11 @@ KEEPOVPN_SCONFIG="no"
 VPN_MODE="client"
 VPN_TYPE="openvpn"
 
-if [ -e /usr/bin/stunnel ] ; then
+if [ ! -e /usr/bin/stunnel ] ; then
   echo "Missing stunnel, your firmware probably do not have pvpn correctly installed"
   exit 1
 fi
-if [ -e /usr/sbin/openvpn ] ; then
+if [ ! -e /usr/sbin/openvpn ] ; then
   echo "Missing openvpn, you firmware probably do not have pvpn correctly installed"
   exit 1
 fi
@@ -291,7 +291,9 @@ finish_pvpn() {
 
   chmod +x /etc/openvpn/update-systemd-resolved
   sed -i "s/^#NTP=/NTP=time.windows.com/" /etc/systemd/timesyncd.conf
-
+  sleep 1
+  systemctl daemon-reload
+  systemctl restart systemd-timesyncd
   echo "PVPN INSTALLEED" |tee /var/log/pvpn_install.log
 
   echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
