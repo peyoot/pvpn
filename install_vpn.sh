@@ -245,9 +245,6 @@ confirm_setting() {
 }
 
 finish_pvpn() {
-  IPSECINSTALLED=$(cat /var/log/pvpn_install.log |grep ipsecinstalled)
-  OVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep ovpninstalled)
-  PVPNINSTALLED=$(cat /var/log/pvpn_install.log |grep pvpninstalled)
 
   echo "You have set up your vpn client mode with pvpn tools.Please note auto-configure only support default vpn client user. If you have multiple user please manually configure it later "
   if prompt-yesno "would you like to download client certs and config file from server" "yes" ; then
@@ -273,8 +270,10 @@ finish_pvpn() {
     echo "To start the VPN service please download the client certs and put it in the right place"
     echo "If you download pvpn-openvpn-clientcerts.zip from http://$SERVER_URL:8000/pvpn, just run: sudo unzip -j pvpn-openvpn-clientcerts.zip -d /etc/openvpn/"
   fi
+  echo "PVPN INSTALLEED" |tee /var/log/pvpn_install.log
+
   echo "You can use systemctl enable/disable openvpn-client@client to add it into system service and auto run after next boot"
-  echo "or you can manually start openvpn by input: openvpn -f /etc/openvpn/client/client.conf"
+  echo "or you can manually start openvpn by input: openvpn --daemon -f /etc/openvpn/client/client.conf"
 }
 
 
@@ -358,30 +357,25 @@ openvpn_install()  {
   STUNNEL_EXIST="no"
   EASYRSA_EXIST="no"
   if [ -e /etc/stunnel ] ; then
-   if prompt-yesno "stunnel already installed,type yes if you want to reinstall it anyway?" "no" ; then
-     echo "stunnel4 will be reinstalled"
-   else
-     STUNNEL_EXIST="yes"
-     echo "Scripts will use current stunnel4 installation"
-   fi
+    echo "configure stunnel auto-start here"
+    if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
+      systemctl enable stunnel
+      echo "stunnel autostart enabled"
+    else
+      echo "you need to manual start stunnel service: systemctl start stunnel"
+    fi
+
+  else
+     echo "Missing stunnel, you probably do not have pvpn correctly installed"
   fi
   if [ -e /etc/openvpn ] ; then
-   if prompt-yesno "openvpn already installed,type yes if you want to reinstall it anyway?" "no" ; then
-     echo "openvpn will be reinstalled"
-   else
-     OVPN_EXIST="yes"
-     echo "Scripts will use current openvpn installation"
-   fi
+     chmod +x /etc/openvpn/update-systemd-resolved
+     sed -i "s/^#NTP=/NTP=time.windows.com/" /etc/systemd/timesyncd.conf
+
+  else
+     echo "Missing openvpn, you probably do not have pvpn correctly installed"
   fi
 
-  echo "configure stunnel auto-start here"
-  if prompt-yesno "would you like to enable stunnel autorun after boot" "yes"; then
-    sed -i "s/^ENABLED=0/ENABLED=1/" /etc/default/stunnel
-    echo "stunnel autostart enabled"
-  else
-    echo "you need to manual start stunnel service"
-  fi
-   
 }
 
 
